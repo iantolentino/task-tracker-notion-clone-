@@ -1,0 +1,743 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>Tasks Tracker</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+/* Override strong tags inside headings to maintain consistent weight */
+h1 strong,
+h2 strong,
+h3 strong {
+	font-weight: 600;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 10px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+
+	table.collection-content {
+		width: 100%;
+		table-layout: fixed;
+	}
+
+	table.collection-content th,
+	table.collection-content td {
+		overflow-wrap: anywhere;
+	}
+
+	table.collection-content td > .user,
+	table.collection-content td > time {
+		white-space: pre-wrap;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content-wrapper {
+	overflow-x: auto;
+}
+
+@media only print {
+	.collection-content-wrapper {
+		overflow-x: visible;
+	}
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.collection-content td {
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+.column-list {
+	display: flex;
+	gap: 46px;
+}
+
+.column {
+	min-width: 0;
+	overflow: hidden;
+}
+
+.column > *:first-child {
+	margin-top: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+table {
+	border-collapse: collapse;
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	padding-inline-start: 0;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol.numbered-list.numbered-list-digits-2 {
+	padding-inline-start: 2em;
+}
+
+ol.numbered-list.numbered-list-digits-3plus {
+	padding-inline-start: 2.4em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.page-description {
+	margin-bottom: 2em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+	empty-cells: show;
+}
+.simple-table td {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table th {
+	height: 29px;
+	min-width: 120px;
+}
+
+.simple-table-header-color {
+	background: rgb(247, 246, 243);
+	color: black;
+}
+.simple-table-header {
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.callout img.notion-static-icon {
+	width: 1em;
+	height: 1em;
+}
+
+.callout p {
+	margin: 0;
+}
+
+.callout h1,
+.callout h2,
+.callout h3 {
+	margin: 0 0 0.6rem;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+blockquote.quote-large {
+	font-size: 1.25em;
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI Variable Display", "Segoe UI", Helvetica, "Apple Color Emoji", "Noto Sans Arabic", "Noto Sans Hebrew", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.highlight-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.highlight-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.highlight-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.highlight-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.highlight-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.highlight-default_background {
+	color: rgba(44, 44, 43, 1);
+}
+.highlight-gray_background {
+	background: rgba(42, 28, 0, 0.07);
+}
+.highlight-brown_background {
+	background: rgba(139, 46, 0, 0.086);
+}
+.highlight-orange_background {
+	background: rgba(224, 101, 1, 0.129);
+}
+.highlight-yellow_background {
+	background: rgba(211, 168, 0, 0.137);
+}
+.highlight-teal_background {
+	background: rgba(0, 100, 45, 0.09);
+}
+.highlight-blue_background {
+	background: rgba(0, 124, 215, 0.094);
+}
+.highlight-purple_background {
+	background: rgba(102, 0, 178, 0.078);
+}
+.highlight-pink_background {
+	background: rgba(197, 0, 93, 0.086);
+}
+.highlight-red_background {
+	background: rgba(223, 22, 0, 0.094);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(125, 122, 117, 1);
+	fill: rgba(125, 122, 117, 1);
+}
+.block-color-brown {
+	color: rgba(159, 118, 90, 1);
+	fill: rgba(159, 118, 90, 1);
+}
+.block-color-orange {
+	color: rgba(210, 123, 45, 1);
+	fill: rgba(210, 123, 45, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 148, 52, 1);
+	fill: rgba(203, 148, 52, 1);
+}
+.block-color-teal {
+	color: rgba(80, 148, 110, 1);
+	fill: rgba(80, 148, 110, 1);
+}
+.block-color-blue {
+	color: rgba(56, 125, 201, 1);
+	fill: rgba(56, 125, 201, 1);
+}
+.block-color-purple {
+	color: rgba(154, 107, 180, 1);
+	fill: rgba(154, 107, 180, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(207, 81, 72, 1);
+	fill: rgba(207, 81, 72, 1);
+}
+.block-color-default_background {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray_background {
+	background: rgba(240, 239, 237, 1);
+}
+.block-color-brown_background {
+	background: rgba(245, 237, 233, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 235, 222, 1);
+}
+.block-color-yellow_background {
+	background: rgba(249, 243, 220, 1);
+}
+.block-color-teal_background {
+	background: rgba(232, 241, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(229, 242, 252, 1);
+}
+.block-color-purple_background {
+	background: rgba(243, 235, 249, 1);
+}
+.block-color-pink_background {
+	background: rgba(250, 233, 241, 1);
+}
+.block-color-red_background {
+	background: rgba(252, 233, 231, 1);
+}
+.select-value-color-default { background-color: rgba(42, 28, 0, 0.07); }
+.select-value-color-gray { background-color: rgba(28, 19, 1, 0.11); }
+.select-value-color-brown { background-color: rgba(127, 51, 0, 0.156); }
+.select-value-color-orange { background-color: rgba(196, 88, 0, 0.203); }
+.select-value-color-yellow { background-color: rgba(209, 156, 0, 0.282); }
+.select-value-color-green { background-color: rgba(0, 96, 38, 0.156); }
+.select-value-color-blue { background-color: rgba(0, 118, 217, 0.203); }
+.select-value-color-purple { background-color: rgba(92, 0, 163, 0.141); }
+.select-value-color-pink { background-color: rgba(183, 0, 78, 0.152); }
+.select-value-color-red { background-color: rgba(206, 24, 0, 0.164); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="2e7a0e68-fd41-80f4-9b9d-d09276ea3ea2" class="page sans"><header><div class="page-header-icon undefined"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/></div><h1 class="page-title" dir="auto">Tasks Tracker</h1><p class="page-description" dir="auto">Stay organized with tasks, your way.</p></header><div class="page-body"><div class="collection-content-wrapper"><table class="collection-content"><colgroup><col style="width:22.240128928283642%"/><col style="width:11.44238517324738%"/><col style="width:17.96937953263497%"/><col style="width:8.058017727639001%"/><col style="width:8.058017727639001%"/><col style="width:9.99194198227236%"/><col style="width:8.058017727639001%"/><col style="width:14.182111200644641%"/></colgroup><thead><tr><th><span class="icon property-icon"><img src="https://app.notion.com/icons/font_gray.svg" style="width:14px;height:14px;display:block"/></span>Task name</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/friends_gray.svg" style="width:14px;height:14px;display:block"/></span>Assignee</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/burst_gray.svg" style="width:14px;height:14px;display:block"/></span>Status</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/calendar_gray.svg" style="width:14px;height:14px;display:block"/></span>Due date</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/arrow-circle-down_gray.svg" style="width:14px;height:14px;display:block"/></span>Priority</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/kind_gray.svg" style="width:14px;height:14px;display:block"/></span>Task type</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/bell-notification_gray.svg" style="width:14px;height:14px;display:block"/></span>Past due</th><th><span class="icon property-icon"><img src="https://app.notion.com/icons/clock_gray.svg" style="width:14px;height:14px;display:block"/></span>Updated at</th></tr></thead><tbody><tr id="317a0e68-fd41-8093-8117-f3f94cbdf27e"><td class="cell-title"><a href="Tasks%20Tracker/Untitled%20317a0e68fd4180938117f3f94cbdf27e.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Untitled</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>March 2, 2026 8:08 AM</time></td></tr><tr id="310a0e68-fd41-804d-8be0-e29fafffae21"><td class="cell-title"><a href="Tasks%20Tracker/March%20Marketing%20Post%20310a0e68fd41804d8be0e29fafffae21.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>March Marketing Post</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>March 25, 2026 8:17 AM</time></td></tr><tr id="309a0e68-fd41-803a-8f33-f4ece1943c5f"><td class="cell-title"><a href="Tasks%20Tracker/Corporate%20Anniversary%20Graphic%20309a0e68fd41803a8f33f4ece1943c5f.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Corporate Anniversary Graphic</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 18, 2026 7:27 AM</time></td></tr><tr id="2eca0e68-fd41-8071-b73b-d946938329e6"><td class="cell-title"><a href="Tasks%20Tracker/LinkedIn%20Ad%20Content%202eca0e68fd418071b73bd946938329e6.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>LinkedIn Ad Content</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 7:24 AM</time></td></tr><tr id="2eca0e68-fd41-8030-a9c5-fdf7c543ba85"><td class="cell-title"><a href="Tasks%20Tracker/Monthly%20Report%20Multimedia%202eca0e68fd418030a9c5fdf7c543ba85.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Monthly Report Multimedia</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 3, 2026 1:41 PM</time></td></tr><tr id="2eca0e68-fd41-8050-ad02-c287aff094b2"><td class="cell-title"><a href="Tasks%20Tracker/QBR%20Report%20Multimedia%202eca0e68fd418050ad02c287aff094b2.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>QBR Report Multimedia</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 7:25 AM</time></td></tr><tr id="2eca0e68-fd41-80aa-aaa2-cb3a7ea093fc"><td class="cell-title"><a href="Tasks%20Tracker/QBR%20Report%20Marketing%202eca0e68fd4180aaaaa2cb3a7ea093fc.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>QBR Report Marketing</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 7:25 AM</time></td></tr><tr id="2eca0e68-fd41-804f-b1df-fe8819a1c1b0"><td class="cell-title"><a href="Tasks%20Tracker/Photoshoot%20for%20Email%20Banner%202eca0e68fd41804fb1dffe8819a1c1b0.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Photoshoot for Email Banner</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 7:25 AM</time></td></tr><tr id="2e8a0e68-fd41-80fa-8bfc-ddf8efadaf07"><td class="cell-title"><a href="Tasks%20Tracker/Strata%20Staff%20Tarp%202e8a0e68fd4180fa8bfcddf8efadaf07.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Strata Staff Tarp</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value"><div class="status-dot"></div>Not started</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 8:26 AM</time></td></tr><tr id="2e9a0e68-fd41-80d4-a734-ee8f84202f1a"><td class="cell-title"><a href="Tasks%20Tracker/PRTNA%20PVC%20ID%20For%20Ms%20Des%202e9a0e68fd4180d4a734ee8f84202f1a.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>PRTNA PVC ID For Ms. Des</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-yellow"><div class="status-dot status-dot-color-yellow"></div>On Hold/Waiting for Material</span></td><td class="cell-dm~C"><time>01/16/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-red">High</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 8:26 AM</time></td></tr><tr id="2e8a0e68-fd41-80c8-95fe-cc363b87c166"><td class="cell-title"><a href="Tasks%20Tracker/Updated%20Email%20Banners%202e8a0e68fd4180c895fecc363b87c166.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Updated Email Banners</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-yellow"><div class="status-dot status-dot-color-yellow"></div>On Hold/Waiting for Material</span></td><td class="cell-dm~C"><time>01/20/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-orange">Graphics</span><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 1:51 PM</time></td></tr><tr id="2fda0e68-fd41-8053-9b6e-d4897b4effb7"><td class="cell-title"><a href="Tasks%20Tracker/HR%20Content%202fda0e68fd4180539b6ed4897b4effb7.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>HR Content</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>In progress</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 4, 2026 1:59 PM</time></td></tr><tr id="2eca0e68-fd41-806c-88cb-cec637519d97"><td class="cell-title"><a href="Tasks%20Tracker/Canada%20Content%20Marketing%202eca0e68fd41806c88cbcec637519d97.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Canada Content Marketing</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>In progress</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-default">Sales Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 22, 2026 12:30 PM</time></td></tr><tr id="2eca0e68-fd41-806a-bf97-f1dcbab97413"><td class="cell-title"><a href="Tasks%20Tracker/Monthly%20Report%20Marketing%202eca0e68fd41806abf97f1dcbab97413.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Monthly Report Marketing</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>In progress</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 3, 2026 1:43 PM</time></td></tr><tr id="2e9a0e68-fd41-80ea-b1a1-f1afbfa1e384"><td class="cell-title"><a href="Tasks%20Tracker/Marketing%20and%20Multimedia%20Policy%202e9a0e68fd4180eab1a1f1afbfa1e384.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Marketing and Multimedia Policy</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>In progress</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span><span class="selected-value select-value-color-gray">Multimedia</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 21, 2026 9:54 AM</time></td></tr><tr id="2e9a0e68-fd41-80b7-b67d-ec2395da7347"><td class="cell-title"><a href="Tasks%20Tracker/Marketing%20and%20Multimedia%20Process%202e9a0e68fd4180b7b67dec2395da7347.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Marketing and Multimedia Process</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-blue"><div class="status-dot status-dot-color-blue"></div>In progress</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 15, 2026 9:07 AM</time></td></tr><tr id="313a0e68-fd41-803e-9f5c-e01938b9d329"><td class="cell-title"><a href="Tasks%20Tracker/Hyper%20Care%20Support%20Banner%20313a0e68fd41803e9f5ce01938b9d329.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Hyper Care Support Banner</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 26, 2026 1:01 PM</time></td></tr><tr id="310a0e68-fd41-8024-aee5-ddb2c11fac04"><td class="cell-title"><a href="Tasks%20Tracker/Urgent%20Hiring%20Graphic%20Accountant%20310a0e68fd418024aee5ddb2c11fac04.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Urgent Hiring Graphic: Accountant</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 23, 2026 8:51 AM</time></td></tr><tr id="310a0e68-fd41-8062-86c1-d99f2c9b1684"><td class="cell-title"><a href="Tasks%20Tracker/SD%20Strata%20Staff%20Collaboration%20+%20Teams%20Working%20Toge%20310a0e68fd41806286c1d99f2c9b1684.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>SD: &quot;Strata Staff Collaboration + Teams Working Together = Great Outcomes”</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 23, 2026 8:21 AM</time></td></tr><tr id="30ca0e68-fd41-8080-92f9-cccfb4afe2cb"><td class="cell-title"><a href="Tasks%20Tracker/Welcome%20Banner%20for%20CNG%2030ca0e68fd41808092f9cccfb4afe2cb.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Welcome Banner for CNG</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>02/20/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>February 20, 2026 8:12 AM</time></td></tr><tr id="30ca0e68-fd41-8012-ad6d-dda590d19e97"><td class="cell-title"><a href="Tasks%20Tracker/Urgent%20Hiring%20CC%20Graphic%2030ca0e68fd418012ad6ddda590d19e97.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Urgent Hiring CC Graphic</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 19, 2026 1:27 PM</time></td></tr><tr id="30ba0e68-fd41-8019-ace9-c9adb78db2d2"><td class="cell-title"><a href="Tasks%20Tracker/Email%20Header%20(You%20are%20Valued,,,)%2030ba0e68fd418019ace9c9adb78db2d2.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Email Header (You are Valued,,,)</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 18, 2026 8:47 AM</time></td></tr><tr id="30ba0e68-fd41-80ad-8185-cedb341aa942"><td class="cell-title"><a href="Tasks%20Tracker/Congratulatory%20Graphic%20for%20ESM%20Patty%2030ba0e68fd4180ad8185cedb341aa942.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Congratulatory Graphic for ESM Patty</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 18, 2026 8:47 AM</time></td></tr><tr id="30ba0e68-fd41-802e-a718-de80aa95c118"><td class="cell-title"><a href="Tasks%20Tracker/300%20Employees%20Term%20and%20Graphics%2030ba0e68fd41802ea718de80aa95c118.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>300 Employees Term and Graphics</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>March 19, 2026 1:24 PM</time></td></tr><tr id="309a0e68-fd41-8058-a01f-e32690f74e58"><td class="cell-title"><a href="Tasks%20Tracker/New%20PRTNA%20Banner%20309a0e68fd418058a01fe32690f74e58.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>New PRTNA Banner</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 16, 2026 1:50 PM</time></td></tr><tr id="309a0e68-fd41-808a-a120-ce7f90ea2c4a"><td class="cell-title"><a href="Tasks%20Tracker/CA%20Sales%20Deck%20Update%20309a0e68fd41808aa120ce7f90ea2c4a.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>CA Sales Deck Update</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 26, 2026 1:23 PM</time></td></tr><tr id="305a0e68-fd41-803d-a7a6-c499e7191564"><td class="cell-title"><a href="Tasks%20Tracker/VDAY%20PREP%20HR%20305a0e68fd41803da7a6c499e7191564.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>VDAY PREP HR</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 16, 2026 7:27 AM</time></td></tr><tr id="304a0e68-fd41-80b3-b74a-fbf6a8346faf"><td class="cell-title"><a href="Tasks%20Tracker/Catch%20Up%20Deck%20for%20CSM%20304a0e68fd4180b3b74afbf6a8346faf.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Catch Up Deck for CSM</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 20, 2026 9:46 AM</time></td></tr><tr id="302a0e68-fd41-8029-972f-fa29153c2891"><td class="cell-title"><a href="Tasks%20Tracker/SD%20Stratafy%20302a0e68fd418029972ffa29153c2891.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>SD Stratafy</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 10, 2026 7:40 AM</time></td></tr><tr id="302a0e68-fd41-8091-81f9-d103aedbb1fd"><td class="cell-title"><a href="Tasks%20Tracker/Wrap%20Up%20Friday%201%2013%20302a0e68fd41809181f9d103aedbb1fd.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Wrap Up Friday 1/13</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 16, 2026 7:27 AM</time></td></tr><tr id="2ffa0e68-fd41-803a-a3a6-e402d241577d"><td class="cell-title"><a href="Tasks%20Tracker/The%20Knight%20Holiday%20Swap%20Graphic%202ffa0e68fd41803aa3a6e402d241577d.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>The Knight Holiday Swap Graphic</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 6, 2026 2:26 PM</time></td></tr><tr id="2fba0e68-fd41-80b8-b452-f3b224cfbcf7"><td class="cell-title"><a href="Tasks%20Tracker/FB%20Careers%20January%20New%20Hires%202fba0e68fd4180b8b452f3b224cfbcf7.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>FB Careers: January New Hires</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 3, 2026 8:04 AM</time></td></tr><tr id="2fba0e68-fd41-8089-b728-c4e04d9f2abf"><td class="cell-title"><a href="Tasks%20Tracker/Signature%20Strata%20Mock%20Up%20Polo%20Shirt%202fba0e68fd418089b728c4e04d9f2abf.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Signature Strata Mock Up Polo Shirt</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>02/03/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>February 2, 2026 10:22 AM</time></td></tr><tr id="2f5a0e68-fd41-8072-862a-c3cbd8876e5b"><td class="cell-title"><a href="Tasks%20Tracker/Regularizations%20(February)%202f5a0e68fd418072862ac3cbd8876e5b.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Regularizations (February)</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 28, 2026 1:50 PM</time></td></tr><tr id="2f5a0e68-fd41-8096-86a9-ed3a8b3aba3d"><td class="cell-title"><a href="Tasks%20Tracker/Anniversaries%20(February)%202f5a0e68fd41809686a9ed3a8b3aba3d.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Anniversaries (February)</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 28, 2026 1:45 PM</time></td></tr><tr id="2f5a0e68-fd41-8014-9889-e66b280f4415"><td class="cell-title"><a href="Tasks%20Tracker/Birthday%20Celebrants%20(February)%202f5a0e68fd4180149889e66b280f4415.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Birthday Celebrants (February)</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 28, 2026 1:28 PM</time></td></tr><tr id="2f4a0e68-fd41-805d-9497-db1e98ed9af6"><td class="cell-title"><a href="Tasks%20Tracker/L&amp;D%20Modules,%20Lesson%20Plan,%20Visual%20Presentation,%20Cer%202f4a0e68fd41805d9497db1e98ed9af6.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>L&amp;D Modules, Lesson Plan, Visual Presentation, Certificates</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 28, 2026 6:04 AM</time></td></tr><tr id="2f4a0e68-fd41-80a1-a4e0-e808d5754747"><td class="cell-title"><a href="Tasks%20Tracker/Updated%20Desktop%20Wallpaper%202f4a0e68fd4180a1a4e0e808d5754747.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Updated Desktop Wallpaper</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/30/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 26, 2026 11:00 AM</time></td></tr><tr id="2f4a0e68-fd41-804d-be21-da2417c21fa1"><td class="cell-title"><a href="Tasks%20Tracker/Strata%20Academy%20Graduation%202f4a0e68fd41804dbe21da2417c21fa1.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Strata Academy Graduation</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/26/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 27, 2026 6:26 AM</time></td></tr><tr id="2efa0e68-fd41-8056-ad95-df9e81e1075f"><td class="cell-title"><a href="Tasks%20Tracker/Happy%20Australia%20Day%20(Jan%2026)%202efa0e68fd418056ad95df9e81e1075f.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Happy Australia Day (Jan 26)</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/26/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 23, 2026 4:36 PM</time></td></tr><tr id="2efa0e68-fd41-802b-95c3-f56d1d433dd1"><td class="cell-title"><a href="Tasks%20Tracker/Marketing%20Content%20Page12%202efa0e68fd41802b95c3f56d1d433dd1.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Marketing Content: Page12 </a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 23, 2026 8:51 AM</time></td></tr><tr id="2eda0e68-fd41-8031-b8fd-cafc635437d6"><td class="cell-title"><a href="Tasks%20Tracker/Careers%20Carousel%20Post%202eda0e68fd418031b8fdcafc635437d6.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Careers: Carousel Post</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"><span class="selected-value select-value-color-red">High</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 8:50 AM</time></td></tr><tr id="2eda0e68-fd41-80c7-8792-dbe68f4d70db"><td class="cell-title"><a href="Tasks%20Tracker/Careers%20BDR%20Job%20Post%202eda0e68fd4180c78792dbe68f4d70db.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Careers: BDR Job Post</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"><span class="selected-value select-value-color-red">High</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 22, 2026 1:31 PM</time></td></tr><tr id="2eda0e68-fd41-808d-b5d2-ff0b31e2112d"><td class="cell-title"><a href="Tasks%20Tracker/Stratify%20SD%20Request%20(Reactive%20Leadership)%202eda0e68fd41808db5d2ff0b31e2112d.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Stratify: SD Request (Reactive Leadership)</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-purple">SD Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 20, 2026 7:34 AM</time></td></tr><tr id="2eda0e68-fd41-80b0-b923-c8afc1d90c99"><td class="cell-title"><a href="Tasks%20Tracker/Retention%20&amp;%20Engagement%20Update%202eda0e68fd4180b0b923c8afc1d90c99.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Retention &amp; Engagement Update</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/20/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 8:26 AM</time></td></tr><tr id="2eda0e68-fd41-8009-b828-e0e063efadcc"><td class="cell-title"><a href="Tasks%20Tracker/Wrap%20Up%20Friday%2001%2030%202eda0e68fd418009b828e0e063efadcc.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Wrap Up Friday 01/30</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>January 29, 2026 3:03 PM</time></td></tr><tr id="2eca0e68-fd41-8020-86cd-c7554861fad4"><td class="cell-title"><a href="Tasks%20Tracker/Horner%20Staff%20Photoshoot%202eca0e68fd41802086cdc7554861fad4.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Horner Staff Photoshoot</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/19/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 19, 2026 2:38 PM</time></td></tr><tr id="2eca0e68-fd41-80d4-9360-ff247ce0004d"><td class="cell-title"><a href="Tasks%20Tracker/FB%20Main%20Ads%20January%202eca0e68fd4180d49360ff247ce0004d.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>FB Main Ads: January</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 2, 2026 12:52 PM</time></td></tr><tr id="2eca0e68-fd41-805b-92bc-c9efce2b1b8d"><td class="cell-title"><a href="Tasks%20Tracker/FB%20Careers%20Ads%20January%202eca0e68fd41805b92bcc9efce2b1b8d.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>FB Careers Ads: January</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>May 5, 2026 9:20 AM</time></td></tr><tr id="2eaa0e68-fd41-80a7-8d30-e632a9a8f9e7"><td class="cell-title"><a href="Tasks%20Tracker/FB%20Ads%20Additional%20(Property%20Management%20Admin)%202eaa0e68fd4180a78d30e632a9a8f9e7.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>FB Ads Additional (Property Management Admin)</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/19/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 19, 2026 2:38 PM</time></td></tr><tr id="2e9a0e68-fd41-8055-94aa-c238c4652486"><td class="cell-title"><a href="Tasks%20Tracker/Sales%20Deck%20Update%20for%20AU%202e9a0e68fd41805594aac238c4652486.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Sales Deck Update for AU</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"></td><td class="cell-x@X^"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR"></td><td class="cell-aumE"><time>February 4, 2026 11:54 AM</time></td></tr><tr id="2e9a0e68-fd41-80bb-a4e2-c6b7151cf027"><td class="cell-title"><a href="Tasks%20Tracker/Customer%20Service%20Day%20Content%202e9a0e68fd4180bba4e2c6b7151cf027.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Customer Service Day Content</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/16/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-orange">Graphics</span><span class="selected-value select-value-color-brown">Holiday</span><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 7:24 AM</time></td></tr><tr id="2e8a0e68-fd41-8054-9bba-c7f831076aba"><td class="cell-title"><a href="Tasks%20Tracker/Requested%20Updates%20for%20Canada%20Deck%202e8a0e68fd4180549bbac7f831076aba.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Requested Updates for Canada Deck</a></td><td class="cell-|i&gt;]"><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/16/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-default">Sales Request</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 16, 2026 7:30 AM</time></td></tr><tr id="2e8a0e68-fd41-803c-808f-f0e21b67f26a"><td class="cell-title"><a href="Tasks%20Tracker/Throwback%20Thursday%20YEP%202025%202e8a0e68fd41803c808ff0e21b67f26a.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Throwback Thursday: YEP 2025</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/15/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-yellow">Medium</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 7:24 AM</time></td></tr><tr id="2e8a0e68-fd41-8028-8cac-fae1814a1c56"><td class="cell-title"><a href="Tasks%20Tracker/Socmed%20Cover%20Photo%20and%20Profile%20Picture%202e8a0e68fd4180288cacfae1814a1c56.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Socmed Cover Photo and Profile Picture</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span><span class="user"><img src="https://lh3.googleusercontent.com/a/ACg8ocLad65MWctUzCB4jD-tgGguCWeP8ovQoED_fMxEkW5TYdPTTDk=s100" class="icon user-icon"/>Ivan </span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/19/2026</time></td><td class="cell-x@X^"></td><td class="cell-:=MT"><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 1:51 PM</time></td></tr><tr id="2e8a0e68-fd41-80b8-a5f4-f44939977227"><td class="cell-title"><a href="Tasks%20Tracker/PRTNA%20Virtual%20Background%20Background%202e8a0e68fd4180b8a5f4f44939977227.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>PRTNA Virtual Background Background</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/15/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-green">Low</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-orange">Graphics</span><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 15, 2026 8:16 AM</time></td></tr><tr id="2e8a0e68-fd41-8095-a053-f8672be25bea"><td class="cell-title"><a href="Tasks%20Tracker/OSH%20Transcription%20&amp;%20Graphic%202e8a0e68fd418095a053f8672be25bea.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>OSH Transcription &amp; Graphic</a></td><td class="cell-|i&gt;]"></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/14/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-red">High</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-orange">Graphics</span><span class="selected-value select-value-color-red">HR Request</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 15, 2026 7:32 AM</time></td></tr><tr id="2e7a0e68-fd41-80be-8fef-dae00b1fcce1"><td class="cell-title"><a href="Tasks%20Tracker/Service%20Offer%20After%20Hours%20Support%202e7a0e68fd4180be8fefdae00b1fcce1.html"><img class="icon notion-static-icon" src="https://app.notion.com/icons/checkmark_green.svg"/>Service Offer: After Hours Support</a></td><td class="cell-|i&gt;]"><span class="user"><span class="icon text-icon user-icon"><span class="user-icon-inner">A</span></span>Akio Adachi</span></td><td class="cell-?xdf"><span class="status-value select-value-color-green"><div class="status-dot status-dot-color-green"></div>Done</span></td><td class="cell-dm~C"><time>01/14/2026</time></td><td class="cell-x@X^"><span class="selected-value select-value-color-red">High</span></td><td class="cell-:=MT"><span class="selected-value select-value-color-orange">Graphics</span><span class="selected-value select-value-color-blue">Marketing</span></td><td class="cell-V`bR">⏰ Past Due</td><td class="cell-aumE"><time>January 20, 2026 7:24 AM</time></td></tr></tbody></table></div><br/><br/></div></article><span class="sans" style="font-size:14px;padding-top:2em"></span></body></html>
