@@ -30,7 +30,7 @@
     </table>
     <script>
         async function load() {
-            const res = await fetch('/api/tasks');
+            const res = await fetch('api/tasks');
             const rows = await res.json();
             const sorted = rows.slice().sort((a, b) => b.id - a.id);
             document.getElementById('meta').textContent = `${rows.length} rows — latest first`;

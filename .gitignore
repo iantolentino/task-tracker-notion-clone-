@@ -1,0 +1,7 @@
+.env
+config.local.php
+.venv/
+.test-venv/
+__pycache__/
+*.py[cod]
+local-test*.db

@@ -1,0 +1,8 @@
+DirectoryIndex index.php
+RewriteEngine On
+RewriteRule ^api/tasks/?$ api.php [QSA,L]
+RewriteRule ^api/tasks/([0-9]+)/?$ api.php?id=$1 [QSA,L]
+RewriteRule ^api/uploads/?$ task-upload.php [QSA,L]
+RewriteRule ^setup/?$ setup.php [QSA,L]
+RewriteRule ^db/?$ db-view.php [QSA,L]
+RewriteRule ^upload/([0-9]+)/?$ upload.php?id=$1 [QSA,L]
