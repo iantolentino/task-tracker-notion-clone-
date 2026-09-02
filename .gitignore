@@ -1,0 +1,4 @@
+.sessions/*
+config.local.php
+uploads/*
+!uploads/.gitkeep
