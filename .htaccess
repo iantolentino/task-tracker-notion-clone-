@@ -2,7 +2,7 @@ DirectoryIndex index.php
 RewriteEngine On
 Options -Indexes
 
-<FilesMatch "^(?:config.*\.php|tasks-tracker\.html|db-viewer\.html|schema\.sql|.*\.csv|.*\.md|.*\.sqlite|.*\.db)$">
+<FilesMatch "^(?:config.*\.php|creatives-ticketing-system\.html|db-viewer\.html|schema\.sql|.*\.csv|.*\.md|.*\.sqlite|.*\.db)$">
     Require all denied
 </FilesMatch>
 RewriteRule ^api/tasks/?$ api.php [QSA,L]

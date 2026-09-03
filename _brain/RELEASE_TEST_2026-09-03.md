@@ -30,7 +30,7 @@ Environment: XAMPP/Apache, PHP, SQLite, `http://localhost/creatives-ticketing-sy
 ## Test cleanup
 
 - All tickets were removed at the user's request and the ticket sequence was reset.
-- Temporary native release-test task removed; the original 57 tasks remain.
+- All task and ticket records were removed for a clean deployment.
 - Temporary admin accounts removed.
 - Temporary uploaded files removed with their parent records.
 - Temporary checklist items removed.
@@ -38,4 +38,4 @@ Environment: XAMPP/Apache, PHP, SQLite, `http://localhost/creatives-ticketing-sy
 
 ## Deployment note
 
-Deploy to `public_html/tickets/creative` for `https://stratastaffglobal.com/tickets/creative/`. Initial credentials are not committed; create `config.local.php` from the provided example. Upload limits above PHP/Apache configuration cannot be guaranteed by application code alone; configure `upload_max_filesize` and `post_max_size` on the target server if uploads approaching 500 MB are required.
+Deploy to `public_html/tickets/creative` for `https://stratastaffglobal.com/tickets/creative/`. The separately generated cPanel package includes a clean SQLite database and one temporary super-admin account; change its password immediately after deployment. Upload limits above PHP/Apache configuration cannot be guaranteed by application code alone; configure `upload_max_filesize` and `post_max_size` on the target server if uploads approaching 500 MB are required.

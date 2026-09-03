@@ -510,7 +510,8 @@ function fmtDate(d) {
 function render() {
     updateClearButton();
     const rows = filtered();
-    const all  = tasks.filter(t => t.name && !t.isTicket);
+    const all  = tasks.filter(t => t.name);
+    const nativeTaskCount = all.filter(t => !t.isTicket).length;
     const ticketCount = tasks.filter(t => t.isTicket).length;
     const totalPages = Math.max(1, Math.ceil(rows.length / pageSize));
     currentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -519,9 +520,9 @@ function render() {
 
     const c = {done:0, prog:0, ns:0, hold:0};
     all.forEach(t => {
-        if (t.status === 'Done') c.done++;
+        if (['Done', 'Resolved', 'Closed'].includes(t.status)) c.done++;
         else if (t.status === 'In progress') c.prog++;
-        else if (t.status === 'On Hold/Waiting for Material') c.hold++;
+        else if (['On Hold/Waiting for Material', 'On hold', 'Waiting for material', 'Waiting for budget'].includes(t.status)) c.hold++;
         else c.ns++;
     });
 
@@ -534,8 +535,8 @@ function render() {
     `;
 
     document.getElementById('tableCount').textContent = rows.length
-        ? `Showing ${start + 1}-${start + pageRows.length} of ${rows.length} filtered records (${all.length} tasks, ${ticketCount} tickets)`
-        : `Showing 0 records (${all.length} tasks, ${ticketCount} tickets)`;
+        ? `Showing ${start + 1}-${start + pageRows.length} of ${rows.length} filtered records (${nativeTaskCount} tasks, ${ticketCount} tickets)`
+        : `Showing 0 records (${nativeTaskCount} tasks, ${ticketCount} tickets)`;
     document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
