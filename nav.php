@@ -20,28 +20,17 @@ function nav_css(): string
             align-items: center;
             gap: 12px;
         }
-        .nav-title {
-            color: #0f172a;
-            font-size: 19px;
-            font-weight: 700;
+        .nav-brand {
+            display: inline-flex;
+            align-items: center;
             text-decoration: none;
         }
-        .nav-sub {
-            font-size: 12px;
-            color: #64748b;
-            background: #f1f5f9;
-            padding: 2px 8px;
-            border-radius: 12px;
-        }
-        .welcome-chip {
-            background: #ecfdf5;
-            color: #047857;
-            border: 1px solid #a7f3d0;
-            border-radius: 999px;
-            padding: 5px 10px;
-            font-size: 12px;
-            font-weight: 700;
-            white-space: nowrap;
+        .nav-brand img {
+            display: block;
+            width: 154px;
+            height: 38px;
+            object-fit: contain;
+            object-position: left center;
         }
         .nav-link {
             color: #64748b;
@@ -84,24 +73,34 @@ function nav_css(): string
 
 function render_nav(string $active = ''): void
 {
-    $user = current_user();
-    $username = htmlspecialchars($user['username'] ?? 'User', ENT_QUOTES, 'UTF-8');
     $activeClass = fn($name) => $active === $name ? ' active' : '';
+    $user = current_user();
     ?>
-    <header class="app-nav">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
+    <aside class="app-nav" id="appNav">
         <div class="nav-left">
-            <span class="welcome-chip">Welcome, <?php echo $username; ?></span>
-            <a class="nav-title" href="./">Tasks Tracker</a>
-            <span class="nav-sub">Marketing &amp; Multimedia</span>
+            <a class="nav-brand" href="./"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></a>
+            <button class="nav-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" aria-controls="primaryNav" onclick="toggleAppNav(this)">
+                <span></span><span></span><span></span>
+            </button>
         </div>
-        <nav class="nav-links">
+        <nav class="nav-links" id="primaryNav" aria-label="Primary navigation">
             <a class="nav-link<?php echo $activeClass('tasks'); ?>" href="./">Tasks</a>
+            <a class="nav-link<?php echo $activeClass('tickets'); ?>" href="tickets.php">Tickets</a>
             <a class="nav-link<?php echo $activeClass('settings'); ?>" href="settings.php">Settings</a>
-            <a class="nav-link" href="logout.php">Logout</a>
-            <?php if ($active === 'tasks'): ?>
-                <button class="nav-button" onclick="openModal()">+ Add Task</button>
-            <?php endif; ?>
+            <?php if (is_super_admin()): ?><a class="nav-link<?php echo $activeClass('db'); ?>" href="db-view.php">Database</a><?php endif; ?>
         </nav>
-    </header>
+        <div class="nav-account">
+            <div><strong><?php echo htmlspecialchars($user['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></strong><span><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $user['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8'); ?></span></div>
+            <a class="nav-logout" href="logout.php">Log out</a>
+        </div>
+    </aside>
+    <script>
+        function toggleAppNav(button) {
+            const nav = document.getElementById('appNav');
+            const open = nav.classList.toggle('nav-open');
+            button.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
+    </script>
     <?php
 }

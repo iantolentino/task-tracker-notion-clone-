@@ -1,4 +1,8 @@
 .sessions/*
 config.local.php
+database/*.sqlite
+database/*.db
+!database/.htaccess
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess

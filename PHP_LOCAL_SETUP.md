@@ -1,52 +1,39 @@
-# Run Locally With PHP and phpMyAdmin
+# Run Locally With PHP and SQLite
 
-This version uses your existing HTML design with a PHP backend and MySQL database.
+This version uses PHP, HTML, CSS, JavaScript, and SQLite for a fast standalone deployment. The SQLite file lives in the protected `database/` folder (and is never served directly). MySQL remains supported as an optional hosted deployment.
 
-## Option 1: XAMPP on your PC
+## Local XAMPP test setup
 
-1. Install XAMPP.
-2. Start Apache and MySQL in the XAMPP Control Panel.
-3. Put this project folder inside `C:\xampp\htdocs\task-tracker`.
-4. Open `http://localhost/phpmyadmin`.
-5. Create a database named `task_tracker`.
-6. Open `http://localhost/task-tracker/setup.php`.
-7. Open `http://localhost/task-tracker/`.
-8. Login with `admin` / `admin123`, then open Settings and change the password.
+1. Copy `config.local.example.php` to `config.local.php` and set a super-admin username and password of at least 12 characters.
+2. Start Apache in the XAMPP Control Panel.
+3. Keep the project at `C:\xampp\htdocs\tasktracker`.
+4. Open `http://localhost/tasktracker/` and sign in. The SQLite database and initial account are created automatically.
+5. On this prepared test workstation, use:
 
-Default local database settings are in `config.php`:
+   - Username: `admin`
+   - Password: `AdminTest123!`
+   - Role: `super_admin`
 
-```php
-'db_host' => '127.0.0.1',
-'db_name' => 'task_tracker',
-'db_user' => 'root',
-'db_pass' => '',
-```
+`config.local.php` is ignored by Git and may override the SQLite path for local testing. Do not upload the local override or database to production.
 
-## Option 2: PHP Built-In Server
+## Option 2: PHP built-in server
 
-If PHP is already installed and MySQL is running:
+If PHP is already installed:
 
 1. Double-click `start-php-local.bat`.
-2. The setup page opens first.
+2. The setup page opens first. SQLite is created automatically.
 3. After setup, open `http://127.0.0.1:8000`.
 
-## cPanel
+## Hosted deployment
 
-1. In cPanel, create a MySQL database and database user.
-2. Add the user to the database with all privileges.
-3. Upload the project files to `public_html` or a subfolder.
-4. Edit `config.php` with your cPanel database name, username, and password.
-5. Visit `https://your-domain.com/setup.php` once.
-6. Visit your site homepage.
-
-After setup works, you can delete or rename `setup.php` on the live server so visitors cannot rerun it.
+For cPanel/SQLite deployment, follow `_brain/CPANEL_DEPLOYMENT.md`. MySQL remains optional: set `db_driver` and private database credentials in the ignored `config.local.php`.
 
 Settings includes:
 
 - Password updates for the logged-in user.
-- Adding new users.
+- Adding administrator users only. The single super-admin account cannot be created from Settings.
 - Deleting users, except the currently logged-in user.
 
-Task files are uploaded from the Add/Edit Task window. Uploaded files appear in the Files column on the task dashboard. MP4 files are blocked.
+Task files are uploaded from the Add/Edit Task window. Ticket attachments allow multiple supported files up to 500 MB each; MP4 files are blocked. Uploaded files appear in the Files column on the task dashboard.
 
-The navbar is shared across the protected pages and links to Tasks, Settings, and Logout. DB View and Setup still exist for manual admin use, but they are hidden from the normal navbar.
+The navbar is shared across the protected pages and links to Tasks, Tickets, Settings, Database (super admins only), and Logout.

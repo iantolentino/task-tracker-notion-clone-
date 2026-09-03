@@ -3,6 +3,7 @@ require __DIR__ . '/auth.php';
 
 try {
     require_api_login();
+    require_api_csrf();
 
     if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
         send_error('Route not found.', 404);
@@ -44,8 +45,12 @@ try {
 
         $originalName = basename(is_array($files['name']) ? $files['name'][$i] : $files['name']);
         $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
-        if ($extension === 'mp4') {
-            send_error('MP4 files are not allowed.', 400);
+        $fileSize = (int) (is_array($files['size']) ? $files['size'][$i] : $files['size']);
+        if ($fileSize <= 0 || $fileSize > 500 * 1024 * 1024) {
+            send_error('Each file must be between 1 byte and 500 MB.', 400);
+        }
+        if (!in_array($extension, allowed_upload_extensions(), true)) {
+            send_error('Unsupported file type. Use PDF, image, Office, text, or ZIP files.', 400);
         }
 
         $tmpName = is_array($files['tmp_name']) ? $files['tmp_name'][$i] : $files['tmp_name'];
@@ -56,17 +61,17 @@ try {
             send_error('Upload failed.', 500);
         }
 
-        $mimeType = mime_content_type($target) ?: '';
-        if ($mimeType === 'video/mp4') {
+        $mimeType = mime_content_type($target) ?: 'application/octet-stream';
+        if ($mimeType === 'video/mp4' || $extension === 'mp4') {
             unlink($target);
             send_error('MP4 files are not allowed.', 400);
         }
 
         $stmt = $pdo->prepare('
             INSERT INTO uploads (task_id, original_name, stored_name, mime_type, file_size, uploaded_by, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, NOW())
+            VALUES (?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
         ');
-        $stmt->execute([$taskId, $originalName, $storedName, $mimeType, filesize($target), current_user()['id'] ?? null]);
+        $stmt->execute([$taskId, $originalName, $storedName, $mimeType, $fileSize, current_user()['id'] ?? null]);
 
         $stmt = $pdo->prepare('SELECT * FROM uploads WHERE id = ? LIMIT 1');
         $stmt->execute([$pdo->lastInsertId()]);
@@ -75,5 +80,6 @@ try {
 
     send_json($saved, 201);
 } catch (Throwable $e) {
-    send_error($e->getMessage(), 500);
+    error_log($e->getMessage());
+    send_error('The upload could not be completed.', 500);
 }

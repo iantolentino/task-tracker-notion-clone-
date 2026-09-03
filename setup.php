@@ -1,9 +1,8 @@
 <?php
 require __DIR__ . '/auth.php';
-$loggedIn = is_logged_in();
-if ($loggedIn) {
-    require __DIR__ . '/nav.php';
-}
+require_super_admin();
+require __DIR__ . '/nav.php';
+$loggedIn = true;
 
 function import_seed_csv(PDO $pdo): int
 {
@@ -30,7 +29,7 @@ function import_seed_csv(PDO $pdo): int
     $inserted = 0;
     $stmt = $pdo->prepare('
         INSERT INTO tasks (name, assignee, due_date, effort, priority, status, type, `desc`, updated_at)
-        VALUES (:name, :assignee, :due_date, :effort, :priority, :status, :type, :desc, NOW())
+        VALUES (:name, :assignee, :due_date, :effort, :priority, :status, :type, :desc, CURRENT_TIMESTAMP)
     ');
 
     while (($row = fgetcsv($handle)) !== false) {
@@ -70,12 +69,14 @@ try {
     create_tasks_table($pdo);
     create_users_table($pdo);
     create_uploads_table($pdo);
+    create_tickets_table($pdo);
+    create_task_todos_table($pdo);
     ensure_default_admin($pdo);
     $inserted = import_seed_csv($pdo);
     $total = (int) $pdo->query('SELECT COUNT(*) FROM tasks')->fetchColumn();
 
     $ok = true;
-    $message = "Database is ready. Imported {$inserted} starter tasks. Total tasks: {$total}. Login with admin / admin123, then change the password in Settings.";
+    $message = "Database is ready. Imported {$inserted} starter tasks. Total tasks: {$total}.";
 } catch (Throwable $e) {
     $message = $e->getMessage();
 }
@@ -85,7 +86,8 @@ try {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Task Tracker Setup</title>
+    <title>Setup - Creatives Ticketing System</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         <?php if ($loggedIn) echo nav_css(); ?>
         body { font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; margin: 0; }
@@ -95,13 +97,14 @@ try {
         code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
         a { color: #2563eb; }
     </style>
+    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
 </head>
 <body>
 <?php if ($loggedIn) render_nav('setup'); ?>
-<main>
+<main id="main-content">
     <h1 class="<?php echo $ok ? 'ok' : 'bad'; ?>"><?php echo $ok ? 'Setup Complete' : 'Setup Error'; ?></h1>
     <p><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></p>
-    <p><a href="./">Open Tasks Tracker</a></p>
+    <p><a href="./">Open Creatives Ticketing System</a></p>
     <p>Database settings are in <code>config.php</code>. For private credentials, create <code>config.local.php</code>.</p>
 </main>
 </body>

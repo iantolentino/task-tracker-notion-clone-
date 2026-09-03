@@ -1,8 +1,15 @@
 DirectoryIndex index.php
 RewriteEngine On
+Options -Indexes
+
+<FilesMatch "^(?:config.*\.php|tasks-tracker\.html|db-viewer\.html|schema\.sql|.*\.csv|.*\.md|.*\.sqlite|.*\.db)$">
+    Require all denied
+</FilesMatch>
 RewriteRule ^api/tasks/?$ api.php [QSA,L]
 RewriteRule ^api/tasks/([0-9]+)/?$ api.php?id=$1 [QSA,L]
 RewriteRule ^api/uploads/?$ task-upload.php [QSA,L]
+RewriteRule ^api/todos/?$ todos.php [QSA,L]
+RewriteRule ^api/todos/([0-9]+)/?$ todos.php?id=$1 [QSA,L]
 RewriteRule ^setup/?$ setup.php [QSA,L]
 RewriteRule ^db/?$ db-view.php [QSA,L]
 RewriteRule ^upload/([0-9]+)/?$ upload.php?id=$1 [QSA,L]

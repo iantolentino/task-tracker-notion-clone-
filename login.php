@@ -10,12 +10,19 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     try {
+        if (!hash_equals(auth_csrf_token(), (string) ($_POST['csrf'] ?? ''))) {
+            throw new RuntimeException('Your session expired. Refresh and try again.');
+        }
         $pdo = pdo_connect();
         create_users_table($pdo);
         ensure_default_admin($pdo);
 
         $username = trim($_POST['username'] ?? '');
         $password = $_POST['password'] ?? '';
+
+        if ($username === '' || strlen($username) > 80 || $password === '' || strlen($password) > 255) {
+            throw new RuntimeException('Wrong username or password.');
+        }
 
         $stmt = $pdo->prepare('SELECT * FROM users WHERE username = ? LIMIT 1');
         $stmt->execute([$username]);
@@ -26,14 +33,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user'] = [
                 'id' => (int) $user['id'],
                 'username' => $user['username'],
+                'role' => $user['role'] ?? 'admin',
             ];
             header('Location: ./');
             exit;
         }
 
         $error = 'Wrong username or password.';
-    } catch (Throwable $e) {
+    } catch (RuntimeException $e) {
         $error = $e->getMessage();
+    } catch (Throwable $e) {
+        error_log($e->getMessage());
+        $error = 'Sign in is temporarily unavailable.';
     }
 }
 ?>
@@ -42,7 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign in - Task Tracker</title>
+    <title>Sign in - Creatives Ticketing System</title>
+    <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         :root { --blue: #1047a9; --ink: #071b42; --muted: #50688e; --panel: #eff5ff; }
         * { box-sizing: border-box; }
@@ -56,7 +68,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .feature-tags span { border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 9px 13px; font-size: 12px; font-weight: 700; }
         .sign-in-panel { display: grid; place-items: center; padding: 32px; background: radial-gradient(circle at 45% 45%, #f8fbff 0%, var(--panel) 62%, #e7effc 100%); }
         .login-card { width: min(410px, 100%); padding: 35px; border-radius: 18px; background: #fff; box-shadow: 0 20px 45px rgba(27, 63, 128, .13); }
-        .brand-logo { width: 205px; height: 42px; margin: 0 0 25px; overflow: hidden; background-image: url('reference-login-layout.png'); background-repeat: no-repeat; background-size: 1340px auto; background-position: -976px -180px; }
+        .brand-logo { width: 205px; height: 42px; margin: 0 0 25px; overflow: hidden; }
+        .brand-logo img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: left center; }
         .access-label { margin-bottom: 8px; color: var(--blue); }
         .login-card h2 { margin: 0; font-size: 32px; line-height: 1.05; letter-spacing: -.04em; }
         .subcopy { margin: 10px 0 24px; color: var(--muted); font-size: 14px; line-height: 1.5; }
@@ -69,29 +82,32 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .hint { margin: 18px 0 0; color: #71819a; font-size: 12px; text-align: center; }
         @media (max-width: 760px) { .login-layout { display: block; } .intro { min-height: auto; padding: 42px 28px; } .intro h1 { font-size: 38px; } .feature-tags { display: none; } .sign-in-panel { min-height: 68vh; padding: 28px 20px; } .login-card { padding: 30px 25px; } }
     </style>
+    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
 </head>
-<body>
+<body class="login-page">
     <main class="login-layout">
-        <section class="intro" aria-label="Task Tracker overview">
+        <section class="intro" aria-label="Creatives Ticketing System overview">
             <p class="eyebrow">Team productivity</p>
-            <h1>Task tracking for every important project.</h1>
-            <p class="intro-copy">Keep work organised, assign clear ownership, and follow progress from one focused dashboard.</p>
-            <div class="feature-tags" aria-label="Task Tracker features"><span>Clear ownership</span><span>Shared progress</span><span>One focused dashboard</span></div>
+            <h1>Creatives Ticketing System</h1>
+            <p class="intro-copy">Manage creative requests, assign clear ownership, and follow progress from one focused workspace.</p>
+            <div class="feature-tags" aria-label="System features"><span>Clear ownership</span><span>Shared progress</span><span>One focused dashboard</span></div>
         </section>
         <section class="sign-in-panel">
             <div class="login-card">
-                <div class="brand-logo" role="img" aria-label="Strata Staff"></div>
+                <div class="brand-logo"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></div>
                 <p class="access-label">Admin access</p>
                 <h2>Sign in</h2>
                 <p class="subcopy">Manage tasks, ownership, and project progress.</p>
                 <?php if ($error): ?><div class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
                 <form method="post">
+                    <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(auth_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
                     <label for="username">Username</label>
-                    <input id="username" name="username" autocomplete="username" required>
+                    <input id="username" name="username" autocomplete="username" maxlength="80" required>
                     <label for="password">Password</label>
-                    <input id="password" name="password" type="password" autocomplete="current-password" required>
+                    <input id="password" name="password" type="password" autocomplete="current-password" maxlength="255" required>
                     <button type="submit">Sign in</button>
                 </form>
+                <p class="hint"><a href="ticket.php">Need help? Submit a ticket</a></p>
             </div>
         </section>
     </main>
