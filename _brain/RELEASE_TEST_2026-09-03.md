@@ -38,4 +38,4 @@ Environment: XAMPP/Apache, PHP, SQLite, `http://localhost/creatives-ticketing-sy
 
 ## Deployment note
 
-Deploy to `public_html/tickets/creative` for `https://stratastaffglobal.com/tickets/creative/`. The separately generated cPanel package includes a clean SQLite database and one temporary super-admin account; change its password immediately after deployment. Upload limits above PHP/Apache configuration cannot be guaranteed by application code alone; configure `upload_max_filesize` and `post_max_size` on the target server if uploads approaching 500 MB are required.
+Deploy to `public_html/tickets/creative` for `https://stratastaff.com/tickets/creative/`. The separately generated cPanel package includes a clean SQLite database and one temporary super-admin account; change its password immediately after deployment. Upload limits above PHP/Apache configuration cannot be guaranteed by application code alone; configure `upload_max_filesize` and `post_max_size` on the target server if uploads approaching 500 MB are required.
