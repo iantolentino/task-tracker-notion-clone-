@@ -30,6 +30,51 @@ try {
         }
 
         $action = $_POST['action'] ?? '';
+        if ($action === 'update_task') {
+            $taskId = (int) ($_POST['task_id'] ?? 0);
+            if ($taskId <= 0) {
+                throw new RuntimeException('Invalid task selected.');
+            }
+            $taskInput = normalize_task_input([
+                'name' => $_POST['name'] ?? '',
+                'assignee' => $_POST['assignee'] ?? '',
+                'dueDate' => $_POST['due_date'] ?? '',
+                'effort' => $_POST['effort'] ?? '',
+                'priority' => $_POST['priority'] ?? '',
+                'status' => $_POST['status'] ?? '',
+                'type' => $_POST['type'] ?? '',
+                'desc' => $_POST['desc'] ?? '',
+            ]);
+            $stmt = $pdo->prepare('UPDATE tasks SET name = ?, assignee = ?, due_date = ?, effort = ?, priority = ?, status = ?, type = ?, `desc` = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            $stmt->execute([$taskInput['name'], $taskInput['assignee'], $taskInput['due_date'], $taskInput['effort'], $taskInput['priority'], $taskInput['status'], $taskInput['type'], $taskInput['desc'], $taskId]);
+            $message = $stmt->rowCount() ? 'Task updated.' : 'Task saved.';
+        }
+
+        if ($action === 'update_user') {
+            $userId = (int) ($_POST['user_id'] ?? 0);
+            $username = trim((string) ($_POST['username'] ?? ''));
+            $newPassword = (string) ($_POST['password'] ?? '');
+            if ($userId <= 0 || $username === '' || strlen($username) > 100 || !preg_match('/^[A-Za-z0-9._@-]+$/', $username)) {
+                throw new RuntimeException('Use a valid username (letters, numbers, dots, dashes, underscores, or @).');
+            }
+            if ($newPassword !== '' && strlen($newPassword) < 12) {
+                throw new RuntimeException('New passwords must be at least 12 characters.');
+            }
+            $stmt = $pdo->prepare('SELECT role FROM users WHERE id = ?');
+            $stmt->execute([$userId]);
+            $existingRole = $stmt->fetchColumn();
+            if (!$existingRole) {
+                throw new RuntimeException('Account not found.');
+            }
+            if ($newPassword === '') {
+                $stmt = $pdo->prepare('UPDATE users SET username = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+                $stmt->execute([$username, $userId]);
+            } else {
+                $stmt = $pdo->prepare('UPDATE users SET username = ?, password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+                $stmt->execute([$username, password_hash($newPassword, PASSWORD_DEFAULT), $userId]);
+            }
+            $message = 'Account updated.';
+        }
         if ($action === 'update_ticket') {
             $ticketId = (int) ($_POST['ticket_id'] ?? 0);
             $assignee = $_POST['assignee'] ?? '';
@@ -136,7 +181,9 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
         th, td { padding: 10px 9px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; font-size: 13px; }
         th { color: #64748b; background: #f8fafc; font-size: 11px; text-transform: uppercase; }
         td form { margin: 0; }
-        input, select { width: 100%; min-width: 110px; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a; font: inherit; font-size: 12px; }
+        input, select, textarea { width: 100%; min-width: 110px; box-sizing: border-box; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a; font: inherit; font-size: 12px; }
+        textarea { resize: vertical; }
+        .task-edit-form, .task-routing-form, .account-edit-form { display: grid; gap: 7px; min-width: 260px; }
         .inline-form { display: grid; grid-template-columns: repeat(8, minmax(100px, 1fr)) auto; gap: 7px; align-items: center; min-width: 1250px; }
         button { padding: 7px 10px; border: 0; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
         button.danger { background: #dc2626; }
@@ -189,18 +236,22 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 
     <section class="panel">
         <h2>Tasks (<?php echo count($tasks); ?>)</h2>
-        <p class="section-note">The main Tasks page provides full task create and edit controls. Delete is available here for cleanup.</p>
-        <div class="scroll"><table><thead><tr><th>ID</th><th>Name</th><th>Assignee</th><th>Status</th><th>Type</th><th>Delete</th></tr></thead><tbody>
-            <?php foreach ($tasks as $task): ?><tr><td><?php echo (int) $task['id']; ?></td><td><?php echo $esc($task['name']); ?></td><td><?php echo $esc($task['assignee']); ?></td><td><?php echo $esc($task['status']); ?></td><td><?php echo $esc($task['type']); ?></td><td><form method="post" onsubmit="return confirm('Delete this task and its files?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><button class="danger" type="submit">Delete</button></form></td></tr><?php endforeach; ?>
-            <?php if (!$tasks): ?><tr><td colspan="6" class="muted">No tasks found.</td></tr><?php endif; ?>
+        <p class="section-note">Super admins can edit every task field or remove a task and its files.</p>
+        <div class="scroll"><table><thead><tr><th>ID</th><th>Task fields</th><th>Routing</th><th>Delete</th></tr></thead><tbody>
+            <?php foreach ($tasks as $task): ?><tr>
+                <td><?php echo (int) $task['id']; ?></td>
+                <td><form method="post" class="task-edit-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><input type="hidden" name="assignee" value="<?php echo $esc($task['assignee']); ?>"><input type="hidden" name="due_date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"><input type="hidden" name="status" value="<?php echo $esc($task['status']); ?>"><input type="hidden" name="priority" value="<?php echo $esc($task['priority']); ?>"><input type="hidden" name="effort" value="<?php echo $esc($task['effort']); ?>"><input name="name" aria-label="Task name" value="<?php echo $esc($task['name']); ?>" required><textarea name="desc" aria-label="Description" rows="2" placeholder="Description"><?php echo $esc($task['desc'] ?? ''); ?></textarea><input name="type" aria-label="Type" value="<?php echo $esc($task['type']); ?>" placeholder="Type"><button type="submit">Save</button></form></td>
+                <td><form method="post" class="task-routing-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><input type="hidden" name="name" value="<?php echo $esc($task['name']); ?>"><input type="hidden" name="desc" value="<?php echo $esc($task['desc'] ?? ''); ?>"><input type="hidden" name="type" value="<?php echo $esc($task['type']); ?>"><input name="assignee" aria-label="Assignee" value="<?php echo $esc($task['assignee']); ?>" placeholder="Assignee"><input type="date" name="due_date" aria-label="Due date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"><select name="status" aria-label="Status"><?php foreach (['Done','In progress','Not started','On Hold/Waiting for Material'] as $status): ?><option<?php echo ($task['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select><select name="priority" aria-label="Priority"><?php foreach (['','Urgent','High','Medium','Low'] as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($task['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select><select name="effort" aria-label="Effort"><?php foreach (['','Small','Medium','Large'] as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($task['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select><button type="submit">Save</button></form></td>
+                <td><form method="post" onsubmit="return confirm('Delete this task and its files?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><button class="danger" type="submit">Delete</button></form></td></tr><?php endforeach; ?>
+            <?php if (!$tasks): ?><tr><td colspan="4" class="muted">No tasks found.</td></tr><?php endif; ?>
         </tbody></table></div>
     </section>
 
     <section class="panel">
         <h2>Accounts (<?php echo count($users); ?>)</h2>
-        <p class="section-note">Create accounts and change passwords in Settings. Delete is available here for super-admin cleanup.</p>
-        <div class="scroll"><table><thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th>Delete</th></tr></thead><tbody>
-            <?php foreach ($users as $account): ?><tr><td><?php echo (int) $account['id']; ?></td><td><?php echo $esc($account['username']); ?></td><td><?php echo $esc(ucwords(str_replace('_', ' ', $account['role'] ?? 'admin'))); ?></td><td><?php echo $esc($account['created_at']); ?></td><td><?php if ((int) $account['id'] === (int) current_user()['id']): ?><span class="muted">Current account</span><?php else: ?><form method="post" onsubmit="return confirm('Delete this account?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" value="<?php echo (int) $account['id']; ?>"><button class="danger" type="submit">Delete</button></form><?php endif; ?></td></tr><?php endforeach; ?>
+        <p class="section-note">Edit usernames or reset passwords here. Roles are fixed: only the existing super-admin remains super-admin.</p>
+        <div class="scroll"><table><thead><tr><th>ID</th><th>Account</th><th>Role</th><th>Created</th><th>Delete</th></tr></thead><tbody>
+            <?php foreach ($users as $account): ?><tr><td><?php echo (int) $account['id']; ?></td><td><form method="post" class="account-edit-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_user"><input type="hidden" name="user_id" value="<?php echo (int) $account['id']; ?>"><input name="username" aria-label="Username" value="<?php echo $esc($account['username']); ?>" required><input type="password" name="password" aria-label="New password" placeholder="New password (optional)"><button type="submit">Save</button></form></td><td><?php echo $esc(ucwords(str_replace('_', ' ', $account['role'] ?? 'admin'))); ?></td><td><?php echo $esc($account['created_at']); ?></td><td><?php if ((int) $account['id'] === (int) current_user()['id']): ?><span class="muted">Current account</span><?php else: ?><form method="post" onsubmit="return confirm('Delete this account?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" value="<?php echo (int) $account['id']; ?>"><button class="danger" type="submit">Delete</button></form><?php endif; ?></td></tr><?php endforeach; ?>
         </tbody></table></div>
     </section>
 </main>
