@@ -6,8 +6,8 @@ This version uses PHP, HTML, CSS, JavaScript, and SQLite for a fast standalone d
 
 1. Copy `config.local.example.php` to `config.local.php` and set a super-admin username and password of at least 12 characters.
 2. Start Apache in the XAMPP Control Panel.
-3. Keep the project at `C:\xampp\htdocs\tasktracker`.
-4. Open `http://localhost/tasktracker/` and sign in. The SQLite database and initial account are created automatically.
+3. Keep the project at `C:\xampp\htdocs\creatives-ticketing-system`.
+4. Open `http://localhost/creatives-ticketing-system/` and sign in. The SQLite database and initial account are created automatically.
 5. On this prepared test workstation, use:
 
    - Username: `admin`

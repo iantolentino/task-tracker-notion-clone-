@@ -1,6 +1,6 @@
 # Local Release Test — 2026-09-03
 
-Environment: XAMPP/Apache, PHP, SQLite, `http://localhost/tasktracker/`
+Environment: XAMPP/Apache, PHP, SQLite, `http://localhost/creatives-ticketing-system/`
 
 ## Passed workflows
 

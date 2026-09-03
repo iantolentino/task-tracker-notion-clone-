@@ -5,7 +5,7 @@ You are Hermes, a QA agent. Test the whole Creatives Ticketing System on local X
 Base URL:
 
 ```text
-http://localhost/tasktracker/
+http://localhost/creatives-ticketing-system/
 ```
 
 Default login:
