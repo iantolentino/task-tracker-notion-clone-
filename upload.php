@@ -31,6 +31,7 @@ if (!is_file($path)) {
 
 header('Content-Type: ' . ($file['mime_type'] ?: 'application/octet-stream'));
 header('Content-Length: ' . filesize($path));
-header('Content-Disposition: attachment; filename="' . addslashes($file['original_name']) . '"');
+$downloadName = preg_replace('/[\r\n"\\\\]+/', '_', basename((string) $file['original_name'])) ?: 'download';
+header('Content-Disposition: attachment; filename="' . $downloadName . '"');
 readfile($path);
 exit;

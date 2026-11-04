@@ -32,6 +32,11 @@ if ($path === '/api/uploads') {
     return true;
 }
 
+if ($path === '/api/todos' || preg_match('#^/api/todos/\d+$#', $path)) {
+    require __DIR__ . '/todos.php';
+    return true;
+}
+
 $file = __DIR__ . $path;
 if (is_file($file)) {
     return false;

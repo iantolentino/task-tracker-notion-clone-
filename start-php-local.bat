@@ -16,8 +16,8 @@ if errorlevel 1 (
   set "PHP_EXE=php"
 )
 
-echo Starting Tasks Tracker on http://127.0.0.1:8000
-echo First-time setup: open http://127.0.0.1:8000/setup.php
-start "" "http://127.0.0.1:8000/setup.php"
+echo Starting Creatives Ticketing System on http://127.0.0.1:8000
+echo Open http://127.0.0.1:8000/ and sign in with your configured super-admin.
+start "" "http://127.0.0.1:8000/"
 "%PHP_EXE%" -S 127.0.0.1:8000 router.php
 pause
