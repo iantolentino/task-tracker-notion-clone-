@@ -8,11 +8,7 @@ This version uses PHP, HTML, CSS, JavaScript, and SQLite for a fast standalone d
 2. Start Apache in the XAMPP Control Panel.
 3. Keep the project at `C:\xampp\htdocs\creatives-ticketing-system`.
 4. Open `http://localhost/creatives-ticketing-system/` and sign in. The SQLite database and initial account are created automatically.
-5. On this prepared test workstation, use:
-
-   - Username: `admin`
-   - Password: `AdminTest123!`
-   - Role: `super_admin`
+5. Sign in with the username and password you set in `config.local.php` (role: `super_admin`).
 
 `config.local.php` is ignored by Git and may override the SQLite path for local testing. Do not upload the local override or database to production.
 
@@ -26,7 +22,7 @@ If PHP is already installed:
 
 ## Hosted deployment
 
-For cPanel/SQLite deployment, follow `_brain/CPANEL_DEPLOYMENT.md`. MySQL remains optional: set `db_driver` and private database credentials in the ignored `config.local.php`.
+For cPanel/SQLite deployment, follow `docs/DEPLOYMENT.md`. MySQL remains optional: set `db_driver` and private database credentials in the ignored `config.local.php`.
 
 Settings includes:
 
