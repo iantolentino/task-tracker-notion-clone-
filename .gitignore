@@ -1,5 +1,21 @@
-.sessions/*
+# Local secrets and sessions
 config.local.php
+.sessions/*
+
+# Local databases (never commit real data)
+database/*.sqlite
+database/*.db
+!database/.htaccess
+
+# Uploaded files
 uploads/*
 !uploads/.gitkeep
 !uploads/.htaccess
+
+# Build output and OS/editor clutter
+release/
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+.idea/
