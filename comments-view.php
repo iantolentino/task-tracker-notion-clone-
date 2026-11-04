@@ -11,7 +11,7 @@ function render_ticket_comments(array $comments): void
     echo '<ol class="comment-list">';
     foreach ($comments as $comment) {
         $isAdmin = ($comment['author_type'] ?? '') !== 'requester';
-        $time = strtotime((string) ($comment['created_at'] ?? ''));
+        $time = stored_time($comment['created_at'] ?? '');
         ?>
         <li class="comment<?php echo $isAdmin ? ' is-admin' : ''; ?>">
             <div class="comment-head">

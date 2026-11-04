@@ -10,6 +10,41 @@ function app_config(): array
     return $config;
 }
 
+// Stored timestamps are UTC (SQLite's CURRENT_TIMESTAMP, and MySQL sessions are set to UTC below);
+// PHP formats them in the configured local time zone.
+date_default_timezone_set(app_config()['timezone'] ?? 'Asia/Manila');
+
+/** Parses a stored UTC timestamp ("YYYY-MM-DD HH:MM:SS"); null when empty or invalid. */
+function stored_time(?string $value): ?int
+{
+    $value = trim((string) $value);
+    if ($value === '') {
+        return null;
+    }
+    $time = strtotime($value . ' UTC');
+    return $time === false ? null : $time;
+}
+
+/** A stored UTC timestamp as a local date, e.g. "Nov 5, 2026". */
+function format_stored_date(?string $value): string
+{
+    $time = stored_time($value);
+    return $time === null ? '' : date('M j, Y', $time);
+}
+
+/** A stored UTC timestamp as a local date and time, e.g. "Nov 5, 2026 · 7:51 AM". */
+function format_stored_datetime(?string $value): string
+{
+    $time = stored_time($value);
+    return $time === null ? '' : date('M j, Y · g:i A', $time);
+}
+
+/** Converts a local "YYYY-MM-DD HH:MM:SS" boundary to the stored UTC form for queries. */
+function local_to_stored(string $local): string
+{
+    return gmdate('Y-m-d H:i:s', strtotime($local));
+}
+
 function pdo_connect(?string $database = null): PDO
 {
     $config = app_config();
@@ -36,11 +71,14 @@ function pdo_connect(?string $database = null): PDO
     }
     $dsn .= ';charset=utf8mb4';
 
-    return new PDO($dsn, $config['db_user'], $config['db_pass'], [
+    $pdo = new PDO($dsn, $config['db_user'], $config['db_pass'], [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
         PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
         PDO::ATTR_EMULATE_PREPARES => false,
     ]);
+    // Match SQLite: CURRENT_TIMESTAMP values are written and read as UTC.
+    $pdo->exec("SET time_zone = '+00:00'");
+    return $pdo;
 }
 
 function create_tasks_table(PDO $pdo): void

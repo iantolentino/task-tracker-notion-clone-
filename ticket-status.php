@@ -131,7 +131,7 @@ $niceDate = function ($value): string {
                         <article class="ticket" id="<?php echo $esc(ticket_reference((int) $row['id'])); ?>">
                             <div class="ticket-head">
                                 <div>
-                                    <p class="reference">Ticket no. <?php echo $esc(ticket_reference((int) $row['id'])); ?> · <?php echo $esc($niceDate($row['created_at'])); ?></p>
+                                    <p class="reference">Ticket no. <?php echo $esc(ticket_reference((int) $row['id'])); ?> · <?php echo $esc(format_stored_date($row['created_at'])); ?></p>
                                     <h3><?php echo $esc($row['subject']); ?></h3>
                                 </div>
                                 <span class="status" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>"><?php echo $esc($row['status']); ?></span>
@@ -139,7 +139,7 @@ $niceDate = function ($value): string {
                             <ul class="ticket-facts">
                                 <li><strong>With</strong> <?php echo $esc($row['assignee']); ?></li>
                                 <?php if (in_array($row['status'], done_statuses(), true) && !empty($row['completed_at'])): ?>
-                                    <li><strong>Completed</strong> <?php echo $esc($niceDate($row['completed_at'])); ?></li>
+                                    <li><strong>Completed</strong> <?php echo $esc(format_stored_date($row['completed_at'])); ?></li>
                                 <?php else: ?>
                                     <li><strong>Due</strong> <?php echo $esc($row['due_date'] ? format_deadline($row['due_date'], $row['due_time'] ?? '') : 'No deadline'); ?></li>
                                 <?php endif; ?>
@@ -153,7 +153,7 @@ $niceDate = function ($value): string {
                                     <p><?php echo $esc($row['description']); ?></p>
                                     <?php if (!empty($row['uploads'])): ?><h4>Files</h4><div class="file-list" style="margin-top:4px;"><?php foreach ($row['uploads'] as $file): ?><span><?php echo $esc($file['name']); ?></span><?php endforeach; ?></div><?php endif; ?>
                                     <h4>Last updated</h4>
-                                    <p><?php echo $esc($niceDate($row['updated_at'])); ?></p>
+                                    <p><?php echo $esc(format_stored_date($row['updated_at'])); ?></p>
                                     <h4 class="comments-title">Comments</h4>
                                     <?php render_ticket_comments($row['comments'] ?? []); ?>
                                     <form method="post" class="comment-form">

@@ -34,7 +34,8 @@ try {
         if ($start > $end) throw new RuntimeException('The start date must be on or before the end date.');
 
         $stmt = $pdo->prepare('SELECT id, requester_name, requester_email, department, assignee, due_date, due_time, other_type, category, priority, effort, status, estimated_cost, subject, description, business_impact, created_at, updated_at, completed_at FROM tickets WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC, id DESC');
-        $stmt->execute([$start . ' 00:00:00', $end . ' 23:59:59']);
+        $stmt->execute([local_to_stored($start . ' 00:00:00'), local_to_stored($end . ' 23:59:59')]);
+        $localStamp = static fn($value) => ($time = stored_time($value)) === null ? '' : date('Y-m-d H:i:s', $time);
 
         header('Content-Type: text/csv; charset=utf-8');
         header('Content-Disposition: attachment; filename="tickets-' . $start . '-to-' . $end . '.csv"');
@@ -46,7 +47,7 @@ try {
         $output = fopen('php://output', 'wb');
         fputcsv($output, ['Ticket no.', 'Task name', 'Requester name', 'Requester email', 'Department', 'Assignee', 'Deadline', 'Deadline time', 'Type / category', 'Other type', 'Priority', 'Effort', 'Status', 'Estimated cost', 'Description', 'Business impact', 'Created at', 'Updated at', 'Completed at']);
         while ($row = $stmt->fetch()) {
-            fputcsv($output, array_map($csvValue, [ticket_reference((int) $row['id']), $row['subject'], $row['requester_name'], $row['requester_email'], $row['department'], $row['assignee'], $row['due_date'], $row['due_time'], $row['category'], $row['other_type'], $row['priority'], $row['effort'], $row['status'], $row['estimated_cost'], $row['description'], $row['business_impact'], $row['created_at'], $row['updated_at'], $row['completed_at']]));
+            fputcsv($output, array_map($csvValue, [ticket_reference((int) $row['id']), $row['subject'], $row['requester_name'], $row['requester_email'], $row['department'], $row['assignee'], $row['due_date'], $row['due_time'], $row['category'], $row['other_type'], $row['priority'], $row['effort'], $row['status'], $row['estimated_cost'], $row['description'], $row['business_impact'], $localStamp($row['created_at']), $localStamp($row['updated_at']), $localStamp($row['completed_at'])]));
         }
         fclose($output);
         exit;
@@ -252,10 +253,10 @@ $niceDate = function ($value): string {
         ?>
                 <div class="tk-cell tk-request">
                     <span class="tk-subject"><?php echo $esc($row['subject']); ?></span>
-                    <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($reference); ?></span> · <span title="<?php echo $esc($row['requester_email']); ?>"><?php echo $esc($row['requester_name']); ?></span><?php if (($row['department'] ?? '') !== ''): ?> · <?php echo $esc($row['department']); ?><?php endif; ?> · <?php echo $esc($niceDate($row['created_at'])); ?><?php if (!empty($row['comments'])): ?> · <span class="tk-comments" title="Comments"><?php echo count($row['comments']); ?> comment<?php echo count($row['comments']) === 1 ? '' : 's'; ?></span><?php endif; ?></span>
+                    <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($reference); ?></span> · <span title="<?php echo $esc($row['requester_email']); ?>"><?php echo $esc($row['requester_name']); ?></span><?php if (($row['department'] ?? '') !== ''): ?> · <?php echo $esc($row['department']); ?><?php endif; ?> · <?php echo $esc(format_stored_date($row['created_at'])); ?><?php if (!empty($row['comments'])): ?> · <span class="tk-comments" title="Comments"><?php echo count($row['comments']); ?> comment<?php echo count($row['comments']) === 1 ? '' : 's'; ?></span><?php endif; ?></span>
                 </div>
                 <div class="tk-cell tk-type" data-label="Type"><?php echo $esc($row['category']); ?><?php if ((string) ($row['other_type'] ?? '') !== ''): ?> · <?php echo $esc($row['other_type']); ?><?php endif; ?></div>
-                <div class="tk-cell" data-label="Due"><?php if (in_array($row['status'], done_statuses(), true) && !empty($row['completed_at'])): ?><span class="tk-done-date">Done <?php echo $esc($niceDate($row['completed_at'])); ?></span><?php elseif ($row['due_date']): ?><?php echo $esc(format_deadline($row['due_date'], $row['due_time'] ?? '')); ?><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
+                <div class="tk-cell" data-label="Due"><?php if (in_array($row['status'], done_statuses(), true) && !empty($row['completed_at'])): ?><span class="tk-done-date">Done <?php echo $esc(format_stored_date($row['completed_at'])); ?></span><?php elseif ($row['due_date']): ?><?php echo $esc(format_deadline($row['due_date'], $row['due_time'] ?? '')); ?><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
                 <div class="tk-cell" data-label="Priority"><?php if ($readyForTasks): ?><span class="badge <?php echo $priorityClass[$row['priority']] ?? 'be'; ?>"><?php echo $esc($row['priority']); ?></span><?php else: ?><span class="triage-badge">Needs triage</span><?php endif; ?></div>
                 <div class="tk-cell" data-label="Status"><?php if ($isEditing): ?><span class="status" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>"><?php echo $esc($row['status']); ?></span><?php else: ?>
                     <form method="post" class="status-quick" onclick="event.stopPropagation()">
@@ -320,7 +321,7 @@ $niceDate = function ($value): string {
                                 <div><dt>Requester</dt><dd><?php echo $esc($row['requester_email']); ?></dd></div>
                                 <?php if (($row['department'] ?? '') !== ''): ?><div><dt>Department</dt><dd><?php echo $esc($row['department']); ?></dd></div><?php endif; ?>
                                 <?php if ($row['due_date']): ?><div><dt>Deadline</dt><dd><?php echo $esc(format_deadline($row['due_date'], $row['due_time'] ?? '')); ?></dd></div><?php endif; ?>
-                                <?php if (!empty($row['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($row['completed_at'])); ?></dd></div><?php endif; ?>
+                                <?php if (!empty($row['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc(format_stored_date($row['completed_at'])); ?></dd></div><?php endif; ?>
                                 <div><dt>Assignee</dt><dd><?php echo $esc($row['assignee']); ?></dd></div>
                                 <?php if (!empty($row['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($row['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
                             </dl>

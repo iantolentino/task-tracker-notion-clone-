@@ -187,7 +187,7 @@ $users = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY 
                 <tr>
                     <td><strong><?php echo htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                     <td><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $row['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td><?php $added = strtotime((string) $row['created_at']); echo htmlspecialchars($added ? date('M j, Y', $added) : (string) $row['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php echo htmlspecialchars(format_stored_date($row['created_at']) ?: (string) $row['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td>
                         <?php $canDelete = (int) $row['id'] !== (int) $user['id'] && (is_super_admin() || ($row['role'] ?? 'admin') !== 'super_admin'); ?>
                         <?php if ($canDelete): ?>

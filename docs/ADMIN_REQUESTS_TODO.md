@@ -40,7 +40,7 @@ The database upgrades itself the first time any page loads after upload (new col
 
 ### Follow-up
 
-- [ ] **Show times in local time.** SQLite stores timestamps in UTC, so comment times (and submitted/completed dates near midnight) show UTC instead of Philippine time. Needs a timezone setting.
+- [x] **Show times in local time.** Timestamps stay stored in UTC and are shown in the `timezone` set in `config.php` (default Asia/Manila), including comments, submitted/completed dates and the CSV export.
 
 ## Questions for the admins
 

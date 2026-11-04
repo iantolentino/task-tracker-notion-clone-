@@ -218,7 +218,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                     <div class="tk-cell" data-label="Assignee"><?php echo $esc($ticket['assignee']); ?></div>
                     <div class="tk-cell" data-label="Status"><span class="status" data-status="<?php echo $esc(strtolower((string) $ticket['status'])); ?>"><?php echo $esc($ticket['status']); ?></span></div>
                     <div class="tk-cell" data-label="Priority"><?php if (($ticket['priority'] ?? '') !== ''): ?><span class="badge <?php echo $priorityClass[$ticket['priority']] ?? 'be'; ?>"><?php echo $esc($ticket['priority']); ?></span><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
-                    <div class="tk-cell db-muted" data-label="Updated"><?php echo $esc($niceDate($ticket['updated_at'] ?? $ticket['created_at'])); ?></div>
+                    <div class="tk-cell db-muted" data-label="Updated"><?php echo $esc(format_stored_date($ticket['updated_at'] ?? $ticket['created_at'])); ?></div>
                     <div class="tk-cell tk-action"><span class="edit-link db-edit-toggle">Edit</span></div>
                 </summary>
                 <div class="db-edit">
@@ -238,8 +238,8 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                         </form>
                         <aside class="tk-body-side db-side">
                             <div><dt>Description</dt><dd class="db-desc"><?php echo $esc($ticket['description']); ?></dd></div>
-                            <div><dt>Submitted</dt><dd><?php echo $esc($niceDate($ticket['created_at'])); ?></dd></div>
-                            <?php if (!empty($ticket['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($ticket['completed_at'])); ?></dd></div><?php endif; ?>
+                            <div><dt>Submitted</dt><dd><?php echo $esc(format_stored_date($ticket['created_at'])); ?></dd></div>
+                            <?php if (!empty($ticket['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc(format_stored_date($ticket['completed_at'])); ?></dd></div><?php endif; ?>
                             <?php if (!empty($ticket['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($ticket['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
                             <form method="post" action="db-view.php#tickets" class="db-delete" onsubmit="return confirm('Delete ticket <?php echo $esc($ref); ?> and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_ticket"><input type="hidden" name="ticket_id" value="<?php echo $tid; ?>"><button class="btn-danger" type="submit">Delete ticket</button></form>
                         </aside>
@@ -288,8 +288,8 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                             <div class="db-form-actions"><button class="save-button" type="submit">Save task</button></div>
                         </form>
                         <aside class="tk-body-side db-side">
-                            <div><dt>Last updated</dt><dd><?php echo $esc($niceDate($task['updated_at'] ?? '')); ?></dd></div>
-                            <?php if (!empty($task['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($task['completed_at'])); ?></dd></div><?php endif; ?>
+                            <div><dt>Last updated</dt><dd><?php echo $esc(format_stored_date($task['updated_at'] ?? '')); ?></dd></div>
+                            <?php if (!empty($task['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc(format_stored_date($task['completed_at'])); ?></dd></div><?php endif; ?>
                             <form method="post" action="db-view.php#tasks" class="db-delete" onsubmit="return confirm('Delete this task and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo $kid; ?>"><button class="btn-danger" type="submit">Delete task</button></form>
                         </aside>
                     </div>
@@ -311,7 +311,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                 <summary class="tk-main db-main">
                     <div class="tk-cell tk-request"><span class="tk-subject"><?php echo $esc($account['username']); ?><?php if ($isMe): ?> <span class="ticket-pill">You</span><?php endif; ?></span></div>
                     <div class="tk-cell" data-label="Role"><?php echo $esc(ucwords(str_replace('_', ' ', $account['role'] ?? 'admin'))); ?></div>
-                    <div class="tk-cell db-muted" data-label="Created"><?php echo $esc($niceDate($account['created_at'])); ?></div>
+                    <div class="tk-cell db-muted" data-label="Created"><?php echo $esc(format_stored_date($account['created_at'])); ?></div>
                     <div class="tk-cell tk-action"><span class="edit-link db-edit-toggle">Edit</span></div>
                 </summary>
                 <div class="db-edit">
