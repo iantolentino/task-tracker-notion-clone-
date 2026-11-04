@@ -113,7 +113,7 @@ $users = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Settings - Creatives Ticketing System</title>
+    <title>Settings - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         body { margin: 0; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }
@@ -138,60 +138,56 @@ $users = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY 
         th { color: #64748b; font-size: 11px; text-transform: uppercase; }
         @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="settings-page">
 <?php render_nav('settings'); ?>
 <main id="main-content">
-    <section>
-        <h1>Settings</h1>
-        <p>Signed in as <?php echo htmlspecialchars($user['username'], ENT_QUOTES, 'UTF-8'); ?> (<?php echo htmlspecialchars($user['role'] ?? 'admin', ENT_QUOTES, 'UTF-8'); ?>).</p>
-        <?php if ($message): ?><div class="msg"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
-        <?php if ($error): ?><div class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
-    </section>
+    <div class="heading"><div><h1>Settings</h1><p class="subtitle">Your password and admin accounts.</p></div></div>
+    <?php if ($message): ?><div class="msg"><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
 
     <div class="grid">
         <section>
-            <h2>Update Password</h2>
+            <h2>Change password</h2>
             <form method="post">
                 <input type="hidden" name="action" value="password">
                 <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                 <label for="current_password">Current password</label>
                 <input id="current_password" name="current_password" type="password" autocomplete="current-password" required>
                 <label for="new_password">New password</label>
-                <input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="12" maxlength="255" required>
+                <input id="new_password" name="new_password" type="password" autocomplete="new-password" minlength="12" maxlength="255" placeholder="At least 12 characters" required>
                 <label for="confirm_password">Confirm new password</label>
                 <input id="confirm_password" name="confirm_password" type="password" autocomplete="new-password" minlength="12" maxlength="255" required>
-                <button type="submit">Update Password</button>
+                <button type="submit">Save password</button>
             </form>
         </section>
 
         <section>
-            <h2>Add User</h2>
+            <h2>Add admin</h2>
             <form method="post">
                 <input type="hidden" name="action" value="user">
                 <input type="hidden" name="csrf" value="<?php echo htmlspecialchars($csrf, ENT_QUOTES, 'UTF-8'); ?>">
                 <label for="username">Username</label>
                 <input id="username" name="username" maxlength="80" required>
                 <label for="user_password">Password</label>
-                <input id="user_password" name="user_password" type="password" minlength="12" maxlength="255" required>
-                <p class="muted" style="margin-top:12px;">New accounts are administrators. The super-admin account is managed separately and cannot be created here.</p>
-                <button type="submit">Add User</button>
+                <input id="user_password" name="user_password" type="password" minlength="12" maxlength="255" placeholder="At least 12 characters" required>
+                <button type="submit">Add admin</button>
             </form>
         </section>
     </div>
 
     <section>
-        <h2>Users</h2>
+        <h2>Admins</h2>
         <table>
-            <thead><tr><th>ID</th><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+            <thead><tr><th>Username</th><th>Role</th><th>Added</th><th></th></tr></thead>
             <tbody>
             <?php foreach ($users as $row): ?>
                 <tr>
-                    <td><?php echo (int) $row['id']; ?></td>
-                    <td><?php echo htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><strong><?php echo htmlspecialchars($row['username'], ENT_QUOTES, 'UTF-8'); ?></strong></td>
                     <td><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $row['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8'); ?></td>
-                    <td><?php echo htmlspecialchars($row['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
+                    <td><?php $added = strtotime((string) $row['created_at']); echo htmlspecialchars($added ? date('M j, Y', $added) : (string) $row['created_at'], ENT_QUOTES, 'UTF-8'); ?></td>
                     <td>
                         <?php $canDelete = (int) $row['id'] !== (int) $user['id'] && (is_super_admin() || ($row['role'] ?? 'admin') !== 'super_admin'); ?>
                         <?php if ($canDelete): ?>
@@ -202,9 +198,9 @@ $users = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY 
                                 <button class="danger" type="submit">Delete</button>
                             </form>
                         <?php elseif ((int) $row['id'] === (int) $user['id']): ?>
-                            <span class="muted">Current user</span>
+                            <span class="muted">You</span>
                         <?php else: ?>
-                            <span class="muted">Protected account</span>
+                            <span class="muted">Protected</span>
                         <?php endif; ?>
                     </td>
                 </tr>

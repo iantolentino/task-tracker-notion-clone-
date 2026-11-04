@@ -125,152 +125,152 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title><?php echo $createMode ? 'Create a ticket' : 'Staff portal'; ?> - Creatives Ticketing System</title>
+    <title><?php echo $createMode ? 'Request Form' : 'Staff portal'; ?> - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <style>
-        :root { --navy: #0f172a; --blue: #1450be; --muted: #5b6b85; --border: #d8e1ee; --bg: #f4f7fb; --green: #087f5b; }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--navy); font-family: Arial, Helvetica, sans-serif; }
-        a { color: var(--blue); }
-        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px max(24px, calc((100vw - 1060px) / 2)); background: #fff; border-bottom: 1px solid var(--border); }
-        .brand { display: inline-flex; align-items: center; text-decoration: none; }
-        .brand img { display: block; width: 154px; height: 38px; object-fit: contain; object-position: left center; }
-        .topbar nav { display: flex; gap: 16px; font-size: 13px; }
-        .topbar nav a { text-decoration: none; font-weight: 700; }
-        main { max-width: 1060px; margin: 0 auto; padding: 54px 24px 72px; }
-        .hero { max-width: 700px; margin-bottom: 28px; }
-        .eyebrow { margin: 0 0 10px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-        h1 { margin: 0; font-size: clamp(32px, 5vw, 48px); letter-spacing: -.05em; line-height: 1.02; }
-        .hero p { margin: 15px 0 0; color: var(--muted); line-height: 1.6; }
-        .layout { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(240px, .75fr); gap: 24px; align-items: start; }
-        .card { padding: 28px; background: #fff; border: 1px solid var(--border); border-radius: 18px; box-shadow: 0 14px 34px rgba(27, 63, 128, .08); }
-        .card h2 { margin: 0 0 6px; font-size: 20px; }
-        .card-intro { margin: 0 0 22px; color: var(--muted); font-size: 13px; line-height: 1.5; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
-        label { display: block; margin: 15px 0 7px; font-size: 13px; font-weight: 800; }
-        input, select, textarea { width: 100%; border: 1px solid #bdcadd; border-radius: 10px; padding: 11px 12px; color: var(--navy); background: #fff; font: inherit; font-size: 14px; outline: none; }
-        textarea { min-height: 170px; resize: vertical; line-height: 1.5; }
-        input:focus, select:focus, textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(20, 80, 190, .14); }
-        input[readonly] { background: #f4f7fb; }
-        .help { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.45; }
-        .submit, .portal-button { width: 100%; min-height: 46px; margin-top: 22px; border: 0; border-radius: 10px; background: var(--blue); color: #fff; cursor: pointer; font: inherit; font-weight: 800; transition: background .2s, transform .2s; }
-        .submit:hover, .portal-button:hover { background: #0f43a4; transform: translateY(-1px); }
-        .portal-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .portal-actions .portal-button { margin-top: 18px; }
-        .portal-button.secondary { background: #0f172a; }
-        .portal-button.secondary:hover { background: #1e293b; }
-        .alert { margin: 0 0 20px; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.45; }
-        .alert.error { border: 1px solid #f0b7b7; background: #fff2f2; color: #9f1d1d; }
-        .alert.success { border: 1px solid #9cdec6; background: #edfff7; color: #096b4d; }
-        .alert ul { margin: 0; padding-left: 18px; }
-        .side-card { background: #0f172a; color: #fff; }
-        .side-card h2 { color: #fff; }
-        .side-card p, .side-card li { color: #c5d0e2; font-size: 13px; line-height: 1.6; }
-        .side-card a { color: #9cc4ff; font-weight: 700; }
-        .side-card ul { margin: 18px 0 0; padding-left: 18px; }
-        .honeypot { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
-        .success-card { max-width: 700px; }
-        @media (max-width: 760px) { .topbar { align-items: flex-start; flex-direction: column; } main { padding-top: 36px; } .layout, .grid, .portal-actions { grid-template-columns: 1fr; } .card { padding: 22px; } }
-        @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; } }
-    </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
-<body>
+<body class="public-page">
     <header class="topbar">
         <a class="brand" href="ticket.php"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></a>
-        <nav aria-label="Ticket navigation"><a href="ticket.php" aria-current="page">Staff Portal</a><a href="ticket-status.php">View Tickets</a><a href="login.php">Admin sign in</a></nav>
+        <nav aria-label="Ticket navigation"><a href="ticket.php" aria-current="page">Request Form</a><a href="ticket-status.php">My tickets</a><a class="nav-quiet" href="login.php">Admin</a><button class="theme-toggle icon-only" type="button" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="when-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg class="when-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button></nav>
     </header>
-    <main id="main-content">
-        <section class="hero">
-            <h1><?php echo $createMode ? 'Create a creative request.' : 'How can we help?'; ?></h1>
-            <p><?php echo $createMode ? 'Add the details our team needs to investigate and route your request.' : 'Use your Strata Staff work email to submit a detailed request or view tickets you have already sent.'; ?></p>
-        </section>
-
+    <main id="main-content" class="<?php echo $createMode && !$submitted ? 'form-width' : 'narrow'; ?>">
         <?php if ($submitted): ?>
             <section class="card success-card" aria-labelledby="submitted-title">
-                <h2 id="submitted-title">Ticket submitted</h2>
-                <p class="card-intro">Your request is now <strong>Open</strong> and visible to the support team.</p>
-                <div class="alert success" role="status">Reference: <strong><?php echo $esc($submitted); ?></strong></div>
-                <p><a href="ticket-status.php">View your tickets</a> or <a href="ticket.php">return to the staff portal</a>.</p>
+                <div class="success-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg></div>
+                <h2 id="submitted-title">Request sent</h2>
+                <p>We'll review it and keep you posted.</p>
+                <p class="success-ref-label">Ticket no.</p>
+                <div class="success-ref" role="status"><?php echo $esc($submitted); ?></div>
+                <div class="portal-actions">
+                    <a class="btn-lg" href="ticket-status.php">Track my tickets</a>
+                    <a class="btn-lg ghost" href="ticket.php">Back to portal</a>
+                </div>
             </section>
         <?php elseif (!$createMode): ?>
-            <div class="layout">
-                <section class="card" aria-label="Ticket access">
-                    <?php if ($errors): ?><div class="alert error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?php echo $esc($error); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-                    <form method="post">
-                        <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>">
-                        <label for="portal_email">Strata Staff work email</label>
-                        <input id="portal_email" name="requester_email" type="email" maxlength="255" autocomplete="email" placeholder="you@stratastaff.com" required>
-                        <div class="portal-actions">
-                            <button class="portal-button" type="submit" name="portal_action" value="start_create">Create ticket</button>
-                            <button class="portal-button secondary" type="submit" name="portal_action" value="view_tickets">View tickets</button>
-                        </div>
-                    </form>
-                </section>
-                <aside class="card side-card">
-                    <h2>How requests are handled</h2>
-                    <p>Your request starts as <strong>Open</strong>. Aiko and Ivan review requests, manage assignments and due dates, and keep the progress status updated.</p>
-                    <ul><li>Use Create ticket for a new request.</li><li>Use View tickets to check status by email.</li><li>Never include passwords or access tokens.</li></ul>
-                </aside>
-            </div>
+            <section class="hero">
+                <h1>How can we help?</h1>
+                <p>Enter your work email to start.</p>
+            </section>
+            <section class="card" aria-label="Ticket access">
+                <?php if ($errors): ?><div class="alert error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?php echo $esc($error); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+                <form method="post">
+                    <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>">
+                    <label class="field-label" for="portal_email">Work email</label>
+                    <input id="portal_email" name="requester_email" type="email" maxlength="255" autocomplete="email" placeholder="you@stratastaff.com" required>
+                    <div class="portal-actions">
+                        <button class="btn-lg" type="submit" name="portal_action" value="start_create">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>Request Form
+                        </button>
+                        <button class="btn-lg ghost" type="submit" name="portal_action" value="view_tickets">
+                            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>My tickets
+                        </button>
+                    </div>
+                </form>
+            </section>
         <?php else: ?>
-            <div class="layout">
-                <section class="card" aria-labelledby="ticket-form-title">
-                    <h2 id="ticket-form-title">Ticket details</h2>
-                    <p class="card-intro">These fields become the ticket record the support team will work from. Your ticket will start as <strong>Open</strong>.</p>
-                    <?php if ($databaseError && !$errors): ?><div class="alert error" role="alert"><?php echo $esc($databaseError); ?></div><?php endif; ?>
-                    <?php if ($errors): ?><div class="alert error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?php echo $esc($error); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
-                    <form method="post" enctype="multipart/form-data">
-                        <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>">
-                        <input type="hidden" name="portal_action" value="submit_ticket">
-                        <div class="honeypot" aria-hidden="true"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
-                        <div class="grid">
-                            <div><label for="requester_name">Your name <span class="help" style="display:inline;">(optional)</span></label><input id="requester_name" name="requester_name" maxlength="120" autocomplete="name" value="<?php echo $esc($values['requester_name']); ?>"></div>
-                            <div><label for="requester_email">Work email</label><input id="requester_email" name="requester_email" type="email" maxlength="255" autocomplete="email" value="<?php echo $esc($values['requester_email']); ?>" readonly required></div>
+            <section class="hero">
+                <h1>Request Form</h1>
+                <p>Complete the form and provide the details and materials needed to get started.</p>
+            </section>
+            <section class="card" aria-label="Request details">
+                <?php if ($databaseError && !$errors): ?><div class="alert error" role="alert"><?php echo $esc($databaseError); ?></div><?php endif; ?>
+                <?php if ($errors): ?><div class="alert error" role="alert"><ul><?php foreach ($errors as $error): ?><li><?php echo $esc($error); ?></li><?php endforeach; ?></ul></div><?php endif; ?>
+                <form method="post" enctype="multipart/form-data" id="ticketForm">
+                    <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>">
+                    <input type="hidden" name="portal_action" value="submit_ticket">
+                    <input type="hidden" name="requester_email" value="<?php echo $esc($values['requester_email']); ?>">
+                    <div class="honeypot" aria-hidden="true" style="position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden;"><label for="website">Website</label><input id="website" name="website" tabindex="-1" autocomplete="off"></div>
+
+                    <div class="requester-chip">Sending as <strong><?php echo $esc($values['requester_email']); ?></strong></div>
+
+                    <div class="form-section">
+                        <h2>What do you need?</h2>
+                        <div class="field">
+                            <label class="field-label" for="subject">Title</label>
+                            <input id="subject" name="subject" maxlength="180" value="<?php echo $esc($values['subject']); ?>" placeholder="e.g. Poster for the March town hall" required>
                         </div>
-                        <div class="grid">
-                            <div><label for="assignee">Assign to <span aria-hidden="true">*</span></label><select id="assignee" name="assignee" required><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo $values['assignee'] === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
-                            <div><label for="due_date">Deadline <span class="help" style="display:inline;">(optional)</span></label><input id="due_date" name="due_date" type="date" value="<?php echo $esc($values['due_date']); ?>"><p class="help">Choose a target date only if one is known.</p></div>
+                        <fieldset class="field" style="border:0;margin:0 0 18px;padding:0;">
+                            <legend class="field-label">Type</legend>
+                            <div class="chip-group" id="categoryGroup">
+                                <?php foreach ($categories as $category): ?>
+                                    <label><input type="checkbox" name="category[]" value="<?php echo $esc($category); ?>"<?php echo in_array($category, $values['category'], true) ? ' checked' : ''; ?>><span><?php echo $esc($category); ?></span></label>
+                                <?php endforeach; ?>
+                            </div>
+                        </fieldset>
+                        <div class="field" id="otherTypeField">
+                            <label class="field-label" for="other_type">What type is it?</label>
+                            <input id="other_type" name="other_type" value="<?php echo $esc($values['other_type']); ?>" placeholder="e.g. Video edit">
                         </div>
-                        <div class="grid">
-                            <div><label for="category">Type / category <span aria-hidden="true">*</span></label><select id="category" name="category[]" multiple size="5" required><?php foreach ($categories as $category): ?><option value="<?php echo $esc($category); ?>"<?php echo in_array($category, $values['category'], true) ? ' selected' : ''; ?>><?php echo $esc($category); ?></option><?php endforeach; ?></select><p class="help">Select one or more. Project is available when a cost estimate is useful.</p></div>
-                            <div><label for="other_type">Other type</label><input id="other_type" name="other_type" value="<?php echo $esc($values['other_type']); ?>" placeholder="Describe another request type"></div>
+                        <div class="field">
+                            <label class="field-label" for="description">Details</label>
+                            <textarea id="description" name="description" placeholder="Size, wording, links, references…" required><?php echo $esc($values['description']); ?></textarea>
                         </div>
-                        <div class="grid">
-                            <div><label for="estimated_cost">Estimated cost <span class="help" style="display:inline;">(optional)</span></label><input id="estimated_cost" name="estimated_cost" type="number" min="0" step="0.01" inputmode="decimal" value="<?php echo $esc($values['estimated_cost']); ?>" placeholder="0.00"><p class="help">Add a budget estimate when useful, including for projects.</p></div>
-                            <div><label>Priority</label><p class="help" style="margin-top:12px;">Set by an admin during triage. Your ticket starts in the Open inbox.</p></div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2>Timing and owner</h2>
+                        <div class="form-row">
+                            <div class="field">
+                                <label class="field-label" for="assignee">Assign to</label>
+                                <select id="assignee" name="assignee" required><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo $values['assignee'] === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select>
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="due_date">Deadline <span class="optional">(optional)</span></label>
+                                <input id="due_date" name="due_date" type="date" value="<?php echo $esc($values['due_date']); ?>">
+                            </div>
                         </div>
-                        <label for="subject">Task name <span aria-hidden="true">*</span></label>
-                        <input id="subject" name="subject" maxlength="180" value="<?php echo $esc($values['subject']); ?>" required>
-                        <label for="description">Description <span aria-hidden="true">*</span></label>
-                        <textarea id="description" name="description" placeholder="Describe the request in as much detail as needed." required><?php echo $esc($values['description']); ?></textarea>
-                        <label for="business_impact">Business impact <span class="help" style="display:inline;">(optional)</span></label>
-                        <textarea id="business_impact" name="business_impact" placeholder="Explain urgency, affected work, or consequences if this is delayed."><?php echo $esc($values['business_impact']); ?></textarea>
-                        <p class="help">Do not include passwords, access tokens, or other sensitive credentials.</p>
-                        <label for="attachments">Attachments</label>
-                        <input id="attachments" name="attachments[]" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt,.zip">
-                        <p class="help">Optional: multiple files are allowed, up to 500 MB per file. PDF, images, Office, text, and ZIP files are supported. MP4 is blocked.</p>
-                        <button class="submit" type="submit">Submit ticket</button>
-                    </form>
-                </section>
-                <aside class="card side-card">
-                    <h2>Ticket lifecycle</h2>
-                    <p>After submission, admins work the ticket from the task list. Active work can be marked In progress, On hold, Waiting for material, or Waiting for budget.</p>
-                    <p><a href="ticket-status.php">View your tickets</a></p>
-                </aside>
-            </div>
+                        <div class="field">
+                            <label class="field-label" for="requester_name">Your name <span class="optional">(optional)</span></label>
+                            <input id="requester_name" name="requester_name" maxlength="120" autocomplete="name" value="<?php echo $esc($values['requester_name']); ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h2>Attachments <span class="optional" style="color:var(--color-muted);font-weight:400;font-size:13px;">(optional)</span></h2>
+                        <p class="field-hint" style="margin:-8px 0 12px;">If you have any design references or suggestions, feel free to add them here.</p>
+                        <label class="file-drop" for="attachments" style="position:relative;">
+                            <input id="attachments" name="attachments[]" type="file" multiple accept=".pdf,.png,.jpg,.jpeg,.gif,.webp,.doc,.docx,.xls,.xlsx,.txt,.zip">
+                            <span><strong>Choose files</strong> or drop them here</span>
+                            <span style="font-size:12px;">PDF, images, Office, text or ZIP · up to 500 MB each</span>
+                        </label>
+                        <div class="file-list" id="fileList" aria-live="polite"></div>
+                    </div>
+
+                    <div class="form-disclaimer" role="note">
+                        <strong>Please note:</strong> Turnaround times may vary depending on the request's complexity, scope, priority, and current workload. Submission of a request does not guarantee immediate completion.
+                    </div>
+                    <div class="form-footer">
+                        <p>Please don't include passwords.</p>
+                        <button class="btn-lg" type="submit">Send request</button>
+                    </div>
+                </form>
+            </section>
         <?php endif; ?>
     </main>
     <?php if ($createMode && !$submitted): ?><script>
-        const categoryField = document.getElementById('category');
+        const categoryBoxes = Array.from(document.querySelectorAll('#categoryGroup input'));
+        const otherFieldWrap = document.getElementById('otherTypeField');
         const otherField = document.getElementById('other_type');
-        function syncOtherType() {
-            const hasOtherCategory = Array.from(categoryField.selectedOptions).some(option => option.value === 'Other');
-            const required = hasOtherCategory;
-            otherField.required = required;
+        function syncCategories() {
+            const hasOther = categoryBoxes.some(box => box.checked && box.value === 'Other');
+            otherFieldWrap.hidden = !hasOther;
+            otherField.required = hasOther;
+            categoryBoxes[0].setCustomValidity(categoryBoxes.some(box => box.checked) ? '' : 'Pick at least one type.');
         }
-        categoryField.addEventListener('change', syncOtherType);
-        syncOtherType();
+        categoryBoxes.forEach(box => box.addEventListener('change', syncCategories));
+        syncCategories();
+
+        const fileInput = document.getElementById('attachments');
+        const fileList = document.getElementById('fileList');
+        fileInput.addEventListener('change', () => {
+            fileList.replaceChildren(...Array.from(fileInput.files).map(file => {
+                const chip = document.createElement('span');
+                chip.textContent = file.name;
+                return chip;
+            }));
+        });
     </script><?php endif; ?>
 </body>
 </html>

@@ -4,7 +4,7 @@
     <meta name="csrf-token" content="<?php echo htmlspecialchars(auth_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tasks - Creatives Ticketing System</title>
+    <title>Tasks - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         :root {
@@ -79,13 +79,14 @@
         tr:last-child td { border-bottom: none; }
         tr:hover td { background: #f8fafc; }
 
-        .t-name { font-weight: 500; max-width: 280px; }
-        .t-name-sub { font-size: 11px; color: var(--hi-c); margin-top: 2px; }
-        .t-type { font-size: 11px; color: var(--muted); max-width: 150px; }
+        .t-name { font-weight: 600; min-width: 220px; max-width: 420px; }
+        .t-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-top: 3px; color: var(--muted); font-size: 12px; }
+        .t-name-sub { color: var(--hi-c); font-weight: 600; }
         .t-actions { display: flex; gap: 6px; }
-        .ticket-row td { background: #fffbeb; }
-        .ticket-row:hover td { background: #fef3c7; }
-        .ticket-tag { margin-top: 3px; color: #a16207; font-size: 11px; font-weight: 700; }
+        .ticket-pill { padding: 1px 7px; border-radius: 999px; background: #fef3c7; color: #a16207; font-size: 11px; font-weight: 700; }
+        .files-count { display: inline-flex; align-items: center; gap: 4px; color: var(--muted); font-size: 12px; white-space: nowrap; }
+        .files-count svg { width: 14px; height: 14px; }
+        .muted-dash { color: #cbd5e1; }
         .file-list { display: flex; flex-direction: column; gap: 3px; max-width: 160px; }
         .file-link { color: var(--primary); font-size: 12px; text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .file-link:hover { text-decoration: underline; }
@@ -166,7 +167,8 @@
             .form-grid { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tasks-page">
 
@@ -178,9 +180,9 @@
     <div class="stats" id="stats"></div>
 
     <div class="toolbar">
-        <input type="text" id="search" placeholder="Search tasks, tickets, or assignee…" oninput="goFirstPage()">
-        <select id="fStatus" onchange="goFirstPage()">
-            <option value="">All Statuses</option>
+        <input type="text" id="search" placeholder="Search…" aria-label="Search tasks" oninput="goFirstPage()">
+        <select id="fStatus" aria-label="Status" onchange="goFirstPage()">
+            <option value="">Any status</option>
             <option>Open</option>
             <option>New</option>
             <option>Done</option>
@@ -193,12 +195,12 @@
             <option>Closed</option>
             <option value="On Hold/Waiting for Material">On Hold</option>
         </select>
-        <select id="fAssignee" onchange="goFirstPage()"><option value="">All Assignees</option></select>
-        <select id="fPriority" onchange="goFirstPage()">
-            <option value="">All Priorities</option>
+        <select id="fAssignee" aria-label="Assignee" onchange="goFirstPage()"><option value="">Anyone</option></select>
+        <select id="fPriority" aria-label="Priority" onchange="goFirstPage()">
+            <option value="">Any priority</option>
             <option>Urgent</option><option>High</option><option>Medium</option><option>Low</option>
         </select>
-        <select id="fType" onchange="goFirstPage()"><option value="">All Types</option></select>
+        <select id="fType" aria-label="Type" onchange="goFirstPage()"><option value="">Any type</option></select>
         <button class="btn btn-ghost" id="clearFiltersBtn" onclick="clearFilters()" style="display:none">Clear</button>
     </div>
 
@@ -211,15 +213,13 @@
             <table>
                 <thead>
                     <tr>
-                        <th onclick="sort('name')">Task Name <span id="si-name">↕</span></th>
+                        <th onclick="sort('name')">Task <span id="si-name">↕</span></th>
                         <th onclick="sort('assignee')">Assignee <span id="si-assignee">↕</span></th>
-                        <th onclick="sort('dueDate')" class="hide-sm">Due Date <span id="si-dueDate">↕</span></th>
+                        <th onclick="sort('dueDate')" class="hide-sm">Due <span id="si-dueDate">↕</span></th>
                         <th onclick="sort('status')">Status <span id="si-status">↕</span></th>
                         <th onclick="sort('priority')" class="hide-sm">Priority <span id="si-priority">↕</span></th>
-                        <th class="hide-sm">Effort</th>
-                        <th class="hide-sm">Type</th>
-                        <th>Files</th>
-                        <th></th>
+                        <th class="hide-sm hide-md">Effort</th>
+                        <th class="hide-sm">Files</th>
                     </tr>
                 </thead>
                 <tbody id="tbody"></tbody>
@@ -306,9 +306,8 @@
         <div class="detail-body">
             <div class="detail-grid" id="detailGrid"></div>
             <section class="detail-section"><h3>Description</h3><p class="detail-copy" id="detailDescription"></p></section>
-            <section class="detail-section" id="detailImpactSection"><h3>Business impact</h3><p class="detail-copy" id="detailImpact"></p></section>
             <section class="detail-section" id="detailFilesSection"><h3>Files</h3><div class="detail-files" id="detailFiles"></div></section>
-            <section class="detail-section"><h3>To-do list</h3>
+            <section class="detail-section"><h3>Checklist</h3>
                 <form class="todo-form" id="todoForm" onsubmit="addTodo(event)">
                     <label for="todoText" class="sr-only">New to-do item</label>
                     <input id="todoText" maxlength="500" placeholder="Add a checklist item" required>
@@ -407,8 +406,8 @@ function rebuildFilters() {
 
     const sa = document.getElementById('fAssignee');
     const st = document.getElementById('fType');
-    sa.innerHTML = '<option value="">All Assignees</option>';
-    st.innerHTML = '<option value="">All Types</option>';
+    sa.innerHTML = '<option value="">Anyone</option>';
+    st.innerHTML = '<option value="">Any type</option>';
     assignees.forEach(a => sa.insertAdjacentHTML('beforeend', `<option${a===savedA?' selected':''}>${a}</option>`));
     types.forEach(t => st.insertAdjacentHTML('beforeend', `<option${t===savedT?' selected':''}>${t}</option>`));
 }
@@ -487,8 +486,8 @@ function changePage(delta) {
 }
 
 // ── Render ───────────────────────────────────────────────────────────────────
-const statusClass = { 'Done':'bd', 'In progress':'bp', 'Not started':'bn', 'On Hold/Waiting for Material':'bh', 'On hold':'bh', 'Waiting for material':'bh', 'Waiting for budget':'bh', 'Open':'bn', 'New':'bn', 'Resolved':'bd', 'Closed':'be' };
-const statusLabel = { 'Done':'Done', 'In progress':'In Progress', 'Not started':'Not Started', 'On Hold/Waiting for Material':'On Hold', 'On hold':'On Hold', 'Waiting for material':'Waiting for Material', 'Waiting for budget':'Waiting for Budget', 'Open':'Open', 'New':'New', 'Resolved':'Resolved', 'Closed':'Closed' };
+const statusClass = { 'Done':'bd', 'In progress':'bp', 'Not started':'bn', 'On Hold/Waiting for Material':'bh', 'On hold':'bh', 'Waiting for material':'bh', 'Waiting for budget':'bh', 'Waiting for Approval':'ba', 'For Revision':'br', 'Open':'bn', 'New':'bn', 'Resolved':'bd', 'Closed':'bd' };
+const statusLabel = { 'Done':'Done', 'In progress':'In Progress', 'Not started':'Not Started', 'On Hold/Waiting for Material':'On Hold', 'On hold':'On Hold', 'Waiting for material':'Waiting for Material', 'Waiting for budget':'Waiting for Budget', 'Waiting for Approval':'Waiting for Approval', 'For Revision':'For Revision', 'Open':'Open', 'New':'New', 'Resolved':'Resolved', 'Closed':'Closed' };
 const prioClass   = { 'Urgent':'bhi', 'High':'bhi', 'Medium':'bme', 'Low':'blo' };
 
 function badge(cls, txt) { return `<span class="badge ${cls}">${e(txt)}</span>`; }
@@ -534,15 +533,15 @@ function render() {
         <div class="stat-card s-total"><div class="lbl">Total</div><div class="val">${all.length}</div></div>
     `;
 
-    document.getElementById('tableCount').textContent = rows.length
-        ? `Showing ${start + 1}-${start + pageRows.length} of ${rows.length} filtered records (${nativeTaskCount} tasks, ${ticketCount} tickets)`
-        : `Showing 0 records (${nativeTaskCount} tasks, ${ticketCount} tickets)`;
+    document.getElementById('tableCount').textContent = rows.length === all.length
+        ? `${all.length} item${all.length === 1 ? '' : 's'} · ${nativeTaskCount} task${nativeTaskCount === 1 ? '' : 's'}, ${ticketCount} ticket${ticketCount === 1 ? '' : 's'}`
+        : `${rows.length} of ${all.length} match your filters`;
     document.getElementById('pageInfo').textContent = `Page ${currentPage} of ${totalPages}`;
     document.getElementById('prevPage').disabled = currentPage <= 1;
     document.getElementById('nextPage').disabled = currentPage >= totalPages;
 
     if (!rows.length) {
-        document.getElementById('tbody').innerHTML = `<tr><td colspan="9"><div class="empty"><div>No tasks match your filters.</div></div></td></tr>`;
+        document.getElementById('tbody').innerHTML = `<tr><td colspan="7"><div class="empty"><div>No tasks match your filters.</div></div></td></tr>`;
         return;
     }
 
@@ -550,21 +549,18 @@ function render() {
         <tr class="task-row ${t.isTicket ? 'ticket-row' : ''}" tabindex="0" role="button" aria-label="View details for ${e(t.name)}" onclick="openDetailsByKey('${t.isTicket ? 'ticket-' + t.ticketId : 'task-' + t.id}')" onkeydown="rowKeyDetails(event, '${t.isTicket ? 'ticket-' + t.ticketId : 'task-' + t.id}')">
             <td>
                 <div class="t-name">${e(t.name)}</div>
-                ${t.isTicket ? `<div class="ticket-tag">${e(t.ticketReference || 'Ticket')} · ${e(statusLabel[t.status] || t.status)}</div>` : ''}
-                ${isPastDue(t) ? '<div class="t-name-sub">Past due</div>' : ''}
-            </td>
-            <td>${e(t.assignee) || '<span style="color:var(--muted)">—</span>'}</td>
-            <td class="hide-sm" style="color:${isPastDue(t)?'var(--hi-c)':'var(--muted)'}; white-space:nowrap">${fmtDate(t.dueDate) || '—'}</td>
-            <td>${badge(statusClass[t.status] || 'bn', statusLabel[t.status] || t.status)}</td>
-            <td class="hide-sm">${t.priority ? badge(prioClass[t.priority] || '', t.priority) : ''}</td>
-            <td class="hide-sm">${t.effort ? badge('be', t.effort) : ''}</td>
-            <td class="hide-sm"><div class="t-type">${e(t.type)}</div>${t.isTicket && t.estimatedCost ? `<div class="t-type">Est. cost: ${e(t.estimatedCost)}</div>` : ''}</td>
-            <td>${fileLinks(t.uploads)}</td>
-            <td>
-                <div class="t-actions">
-                    ${t.isTicket ? `<a class="btn btn-ghost btn-sm" onclick="event.stopPropagation()" href="tickets.php?edit=${encodeURIComponent(t.ticketId || '')}#${e(t.ticketReference || '')}">Edit</a>` : `<button class="btn btn-ghost btn-sm" onclick="event.stopPropagation();editTask(${t.id})">Edit</button><button class="btn btn-danger btn-sm" onclick="event.stopPropagation();askDelete(${t.id})">Delete</button>`}
+                <div class="t-meta">
+                    ${t.isTicket ? `<span class="ticket-pill">${e(t.ticketReference || 'Ticket')}</span>` : ''}
+                    ${t.isTicket ? e(t.category || '') : e(t.type || '')}
+                    ${isPastDue(t) ? '<span class="t-name-sub">Past due</span>' : ''}
                 </div>
             </td>
+            <td>${e(t.isTicket ? t.ticketAssignee : t.assignee) || '<span class="muted-dash">—</span>'}</td>
+            <td class="hide-sm" style="color:${isPastDue(t)?'var(--hi-c)':'var(--muted)'}; white-space:nowrap">${fmtDate(t.dueDate) || '<span class="muted-dash">—</span>'}</td>
+            <td>${badge(statusClass[t.status] || 'bn', statusLabel[t.status] || t.status)}</td>
+            <td class="hide-sm">${t.priority ? badge(prioClass[t.priority] || '', t.priority) : '<span class="muted-dash">—</span>'}</td>
+            <td class="hide-sm hide-md">${t.effort ? badge('be', t.effort) : '<span class="muted-dash">—</span>'}</td>
+            <td class="hide-sm">${t.uploads?.length ? `<span class="files-count" title="${e(t.uploads.map(f => f.name).join(', '))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${t.uploads.length}</span>` : '<span class="muted-dash">—</span>'}</td>
         </tr>
     `).join('');
 }
@@ -590,24 +586,23 @@ function rowKeyDetails(event, key) {
 
 async function openDetails(task) {
     detailTask = task;
-    document.getElementById('detailKind').textContent = task.isTicket ? (task.ticketReference || 'Ticket') : `Task #${task.id}`;
+    document.getElementById('detailKind').textContent = task.isTicket ? `Ticket no. ${task.ticketReference || ''}` : 'Task';
     document.getElementById('detailTitle').textContent = task.name;
     const details = [
-        ['Assignee', task.ticketAssignee || task.assignee || 'Not assigned'], ['Due date', fmtDate(task.dueDate) || 'Not set'],
-        ['Status', statusLabel[task.status] || task.status], ['Priority', task.priority || 'Not set'],
-        ['Effort', task.effort || 'Not set'], ['Type / category', task.category || task.type || 'Not set'],
-        ['Estimated cost', task.estimatedCost || 'Not set'], ['Last updated', task.updated_at || 'Not available']
+        ['Status', statusLabel[task.status] || task.status], ['Assignee', task.ticketAssignee || task.assignee || '—'],
+        ['Due', fmtDate(task.dueDate) || '—'], ['Priority', task.priority || '—'],
+        ['Effort', task.effort || '—'], ['Type', task.category || task.type || '—'],
     ];
-    if (task.isTicket) details.unshift(['Requester', `${task.requesterName || ''} (${task.requesterEmail || ''})`]);
+    if (task.isTicket) details.push(['Requested by', task.requesterName || task.requesterEmail || '—']);
     if (task.otherType) details.push(['Other type', task.otherType]);
-    document.getElementById('detailGrid').innerHTML = details.map(([label, value]) => `<div class="detail-item"><span>${e(label)}</span><strong>${e(value)}</strong></div>`).join('');
-    document.getElementById('detailDescription').textContent = task.desc || 'No description provided.';
-    document.getElementById('detailImpactSection').hidden = !task.businessImpact;
-    document.getElementById('detailImpact').textContent = task.businessImpact || '';
+    const updated = task.updated_at ? new Date(task.updated_at.replace(' ', 'T')) : null;
+    if (updated && !isNaN(updated)) details.push(['Updated', updated.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})]);
+    document.getElementById('detailGrid').innerHTML = details.map(([label, value]) => `<div class="detail-item"><span>${e(label)}</span><strong${label === 'Requested by' && task.requesterEmail ? ` title="${e(task.requesterEmail)}"` : ''}>${e(value)}</strong></div>`).join('');
+    document.getElementById('detailDescription').textContent = task.desc || 'No description.';
     document.getElementById('detailFiles').innerHTML = task.uploads?.length ? task.uploads.map(file => `<a href="${e(file.url)}">${e(file.name)}</a>`).join('') : '<div class="todo-empty">No files attached.</div>';
     document.getElementById('detailActions').innerHTML = task.isTicket
         ? `<a class="btn btn-primary" href="tickets.php?edit=${encodeURIComponent(task.ticketId)}#${e(task.ticketReference || '')}">Edit ticket</a>`
-        : `<button class="btn btn-primary" type="button" onclick="closeDetails();editTask(${task.id})">Edit task</button>`;
+        : `<button class="btn btn-primary" type="button" onclick="closeDetails();editTask(${task.id})">Edit task</button><button class="btn btn-ghost" type="button" style="color:var(--hi-c)" onclick="askDelete(${task.id})">Delete</button>`;
     document.getElementById('detailsOv').classList.add('open');
     document.body.style.overflow = 'hidden';
     document.querySelector('.detail-close').focus();
@@ -793,6 +788,7 @@ async function confirmDelete() {
     try {
         await api(`api/tasks/${deleteId}`, { method: 'DELETE' });
         closeConfirm();
+        closeDetails();
         await loadTasks();
     } catch (err) {
         alert('Delete failed: ' + err.message);

@@ -53,14 +53,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Sign in - Creatives Ticketing System</title>
+    <title>Sign in - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         :root { --blue: #1047a9; --ink: #071b42; --muted: #50688e; --panel: #eff5ff; }
         * { box-sizing: border-box; }
         body { min-height: 100vh; margin: 0; background: #d9e2f1; color: var(--ink); font-family: Arial, Helvetica, sans-serif; }
         .login-layout { min-height: 100vh; display: grid; grid-template-columns: 56% 44%; overflow: hidden; }
-        .intro { position: relative; display: flex; flex-direction: column; min-height: 100vh; padding: 60px 6%; color: #fff; background: linear-gradient(145deg, #0c3d94 0%, #124dac 53%, #0f46a7 100%); }
+        .intro { position: relative; display: flex; flex-direction: column; justify-content: center; min-height: 100vh; padding: 60px 6%; color: #fff; background: linear-gradient(145deg, #0c3d94 0%, #124dac 53%, #0f46a7 100%); }
         .eyebrow, .access-label { margin: 0 0 14px; color: inherit; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
         .intro h1 { max-width: 620px; margin: 0; font-size: clamp(40px, 4vw, 58px); line-height: .98; letter-spacing: -.055em; }
         .intro-copy { max-width: 535px; margin: 20px 0 0; color: #fff; font-size: 16px; line-height: 1.55; }
@@ -82,22 +82,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .hint { margin: 18px 0 0; color: #71819a; font-size: 12px; text-align: center; }
         @media (max-width: 760px) { .login-layout { display: block; } .intro { min-height: auto; padding: 42px 28px; } .intro h1 { font-size: 38px; } .feature-tags { display: none; } .sign-in-panel { min-height: 68vh; padding: 28px 20px; } .login-card { padding: 30px 25px; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="login-page">
+    <div class="login-theme"><button class="theme-toggle icon-only" type="button" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="when-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg class="when-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button></div>
     <main class="login-layout">
-        <section class="intro" aria-label="Creatives Ticketing System overview">
-            <p class="eyebrow">Team productivity</p>
-            <h1>Creatives Ticketing System</h1>
-            <p class="intro-copy">Manage creative requests, assign clear ownership, and follow progress from one focused workspace.</p>
-            <div class="feature-tags" aria-label="System features"><span>Clear ownership</span><span>Shared progress</span><span>One focused dashboard</span></div>
+        <section class="intro" aria-label="Multimedia and Marketing Ticketing System overview">
+            <h1>Multimedia and Marketing Ticketing System</h1>
+            <p class="intro-copy">Creative requests, in one place.</p>
         </section>
         <section class="sign-in-panel">
             <div class="login-card">
                 <div class="brand-logo"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></div>
-                <p class="access-label">Admin access</p>
-                <h2>Sign in</h2>
-                <p class="subcopy">Manage tasks, ownership, and project progress.</p>
+                <h2>Admin sign in</h2>
+                <p class="subcopy">Welcome back.</p>
                 <?php if ($error): ?><div class="error"><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></div><?php endif; ?>
                 <form method="post">
                     <input type="hidden" name="csrf" value="<?php echo htmlspecialchars(auth_csrf_token(), ENT_QUOTES, 'UTF-8'); ?>">
@@ -107,7 +106,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     <input id="password" name="password" type="password" autocomplete="current-password" maxlength="255" required>
                     <button type="submit">Sign in</button>
                 </form>
-                <p class="hint"><a href="ticket.php">Need help? Submit a ticket</a></p>
+                <p class="hint">Not an admin? <a href="ticket.php">Go to the staff portal</a></p>
             </div>
         </section>
     </main>

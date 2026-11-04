@@ -86,7 +86,7 @@ try {
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Setup - Creatives Ticketing System</title>
+    <title>Setup - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         <?php if ($loggedIn) echo nav_css(); ?>
@@ -97,14 +97,15 @@ try {
         code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
         a { color: #2563eb; }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body>
 <?php if ($loggedIn) render_nav('setup'); ?>
 <main id="main-content">
     <h1 class="<?php echo $ok ? 'ok' : 'bad'; ?>"><?php echo $ok ? 'Setup Complete' : 'Setup Error'; ?></h1>
     <p><?php echo htmlspecialchars($message, ENT_QUOTES, 'UTF-8'); ?></p>
-    <p><a href="./">Open Creatives Ticketing System</a></p>
+    <p><a href="./">Open Multimedia and Marketing Ticketing System</a></p>
     <p>Database settings are in <code>config.php</code>. For private credentials, create <code>config.local.php</code>.</p>
 </main>
 </body>

@@ -155,105 +155,213 @@ try {
 }
 
 $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+$niceDate = function ($value): string {
+    $time = strtotime((string) $value);
+    return $time ? date('M j, Y', $time) : '';
+};
+$priorityClass = ['Urgent' => 'bhi', 'High' => 'bhi', 'Medium' => 'bme', 'Normal' => 'be', 'Low' => 'blo'];
+$currentUserId = (int) (current_user()['id'] ?? 0);
 ?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Database - Creatives Ticketing System</title>
+    <title>Database - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
-        body { margin: 0; background: #f8fafc; color: #0f172a; font-family: Arial, Helvetica, sans-serif; }
+        body { margin: 0; }
         <?php echo nav_css(); ?>
-        main { max-width: 1400px; margin: 0 auto; padding: 32px 18px 60px; }
-        .heading { display: flex; align-items: flex-end; justify-content: space-between; gap: 18px; margin-bottom: 22px; }
-        h1 { margin: 0 0 6px; font-size: 26px; letter-spacing: -.03em; }
-        h2 { margin: 0 0 14px; font-size: 18px; }
-        .subtitle { margin: 0; color: #64748b; font-size: 13px; }
-        .link-button { display: inline-flex; align-items: center; min-height: 40px; padding: 0 14px; border-radius: 8px; background: #2563eb; color: #fff; text-decoration: none; font-size: 13px; font-weight: 700; }
-        .panel { margin-bottom: 22px; padding: 20px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 4px 12px rgba(15, 23, 42, .04); }
-        .alert { margin-bottom: 18px; padding: 12px 14px; border-radius: 8px; font-size: 13px; }
-        .ok { border: 1px solid #a7f3d0; background: #ecfdf5; color: #047857; }
-        .bad { border: 1px solid #fca5a5; background: #fef2f2; color: #b91c1c; }
-        .scroll { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 10px 9px; border-bottom: 1px solid #e2e8f0; text-align: left; vertical-align: top; font-size: 13px; }
-        th { color: #64748b; background: #f8fafc; font-size: 11px; text-transform: uppercase; }
-        td form { margin: 0; }
-        input, select, textarea { width: 100%; min-width: 110px; box-sizing: border-box; padding: 7px 8px; border: 1px solid #cbd5e1; border-radius: 6px; background: #fff; color: #0f172a; font: inherit; font-size: 12px; }
-        textarea { resize: vertical; }
-        .task-edit-form, .task-routing-form, .account-edit-form { display: grid; gap: 7px; min-width: 260px; }
-        .inline-form { display: grid; grid-template-columns: repeat(8, minmax(100px, 1fr)) auto; gap: 7px; align-items: center; min-width: 1250px; }
-        button { padding: 7px 10px; border: 0; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font: inherit; font-size: 12px; font-weight: 700; }
-        button.danger { background: #dc2626; }
-        .muted { color: #64748b; font-size: 12px; }
-        .description { max-width: 440px; white-space: pre-wrap; color: #334155; line-height: 1.5; }
-        .ticket-ref { color: #2563eb; font-size: 11px; font-weight: 800; letter-spacing: .1em; }
-        .section-note { margin: -7px 0 15px; color: #64748b; font-size: 12px; }
-        @media (max-width: 760px) { .heading { align-items: flex-start; flex-direction: column; } .link-button { width: 100%; justify-content: center; } .panel { padding: 15px; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="db-page">
 <?php render_nav('db'); ?>
 <main id="main-content">
-    <div class="heading"><div><h1>Database management</h1><p class="subtitle">Super-admin controls for users, tasks, and submitted tickets.</p></div><a class="link-button" href="ticket.php" target="_blank" rel="noopener">Open public ticket form</a></div>
+    <div class="heading">
+        <div><h1>Database</h1><p class="subtitle">View, edit or remove any ticket, task or account.</p></div>
+    </div>
     <?php if ($message): ?><div class="alert ok" role="status"><?php echo $esc($message); ?></div><?php endif; ?>
-    <?php if ($error): ?><div class="alert bad" role="alert"><?php echo $esc($error); ?></div><?php endif; ?>
+    <?php if ($error): ?><div class="alert error" role="alert"><?php echo $esc($error); ?></div><?php endif; ?>
 
-    <section class="panel">
-        <h2>Submitted tickets (<?php echo count($tickets); ?>)</h2>
-        <p class="section-note">Super admins can edit routing, cost, and status here. Public requesters can only view their own tickets by email.</p>
-        <div class="scroll"><table>
-            <thead><tr><th>Reference / subject</th><th>Requester</th><th>Routing and status</th><th>Details</th><th>Delete</th></tr></thead>
-            <tbody>
-            <?php foreach ($tickets as $ticket): ?>
-                <tr>
-                    <td><div class="ticket-ref"><?php echo $esc(ticket_reference((int) $ticket['id'])); ?></div><strong><?php echo $esc($ticket['subject']); ?></strong></td>
-                    <td><?php echo $esc($ticket['requester_name']); ?><br><span class="muted"><?php echo $esc($ticket['requester_email']); ?></span></td>
-                    <td>
-                        <form method="post" class="inline-form">
-                            <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>">
-                            <select name="assignee" aria-label="Assignee"><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo ($ticket['assignee'] ?? '') === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select>
-                            <input type="date" name="due_date" aria-label="Deadline" value="<?php echo $esc($ticket['due_date'] ?? ''); ?>">
-                            <select name="category[]" aria-label="Type and category" multiple size="5"><?php $rowCategories = array_map('trim', explode(',', (string) ($ticket['category'] ?? ''))); foreach ($categories as $category): ?><option value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' selected' : ''; ?>><?php echo $esc($category); ?></option><?php endforeach; ?></select>
-                            <input type="number" min="0" step="0.01" name="estimated_cost" aria-label="Estimated cost" value="<?php echo $esc($ticket['estimated_cost'] ?? ''); ?>" placeholder="Cost">
-                            <select name="priority" aria-label="Priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($ticket['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select>
-                            <select name="effort" aria-label="Effort"><?php foreach ($efforts as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($ticket['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select>
-                            <select name="status" aria-label="Status"><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($ticket['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select>
-                            <button type="submit">Save</button>
+    <div class="db-toolbar">
+        <div class="tk-tabs" role="tablist" aria-label="Database tables">
+            <button type="button" role="tab" data-tab="tickets" aria-selected="true">Tickets <span><?php echo count($tickets); ?></span></button>
+            <button type="button" role="tab" data-tab="tasks" aria-selected="false">Tasks <span><?php echo count($tasks); ?></span></button>
+            <button type="button" role="tab" data-tab="accounts" aria-selected="false">Accounts <span><?php echo count($users); ?></span></button>
+        </div>
+        <input type="search" id="dbSearch" class="db-search" placeholder="Search this table…" aria-label="Search this table">
+    </div>
+
+    <!-- Tickets -->
+    <section class="tk-table db-panel" data-panel="tickets" style="--db-cols: minmax(240px, 2.4fr) 110px 130px 110px 110px 70px;">
+        <div class="tk-head db-head" aria-hidden="true"><span>Ticket</span><span>Assignee</span><span>Status</span><span>Priority</span><span>Updated</span><span></span></div>
+        <?php foreach ($tickets as $ticket):
+            $tid = (int) $ticket['id'];
+            $ref = ticket_reference($tid);
+        ?>
+            <details class="db-row" id="db-<?php echo $esc($ref); ?>">
+                <summary class="tk-main db-main">
+                    <div class="tk-cell tk-request">
+                        <span class="tk-subject"><?php echo $esc($ticket['subject']); ?></span>
+                        <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($ref); ?></span> · <?php echo $esc($ticket['requester_name']); ?> · <?php echo $esc($ticket['requester_email']); ?></span>
+                    </div>
+                    <div class="tk-cell" data-label="Assignee"><?php echo $esc($ticket['assignee']); ?></div>
+                    <div class="tk-cell" data-label="Status"><span class="status" data-status="<?php echo $esc(strtolower((string) $ticket['status'])); ?>"><?php echo $esc($ticket['status']); ?></span></div>
+                    <div class="tk-cell" data-label="Priority"><?php if (($ticket['priority'] ?? '') !== ''): ?><span class="badge <?php echo $priorityClass[$ticket['priority']] ?? 'be'; ?>"><?php echo $esc($ticket['priority']); ?></span><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
+                    <div class="tk-cell db-muted" data-label="Updated"><?php echo $esc($niceDate($ticket['updated_at'] ?? $ticket['created_at'])); ?></div>
+                    <div class="tk-cell tk-action"><span class="edit-link db-edit-toggle">Edit</span></div>
+                </summary>
+                <div class="db-edit">
+                    <div class="db-edit-grid">
+                        <form method="post" action="db-view.php#tickets" class="db-form">
+                            <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="ticket_id" value="<?php echo $tid; ?>">
+                            <div class="edit-grid edit-grid-4">
+                                <div class="edit-field"><label for="t-status-<?php echo $tid; ?>">Status</label><select id="t-status-<?php echo $tid; ?>" name="status"><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($ticket['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="t-priority-<?php echo $tid; ?>">Priority</label><select id="t-priority-<?php echo $tid; ?>" name="priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($ticket['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="t-effort-<?php echo $tid; ?>">Effort</label><select id="t-effort-<?php echo $tid; ?>" name="effort"><?php foreach ($efforts as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($ticket['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="t-assignee-<?php echo $tid; ?>">Assignee</label><select id="t-assignee-<?php echo $tid; ?>" name="assignee"><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo ($ticket['assignee'] ?? '') === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="t-due-<?php echo $tid; ?>">Deadline</label><input id="t-due-<?php echo $tid; ?>" type="date" name="due_date" value="<?php echo $esc($ticket['due_date'] ?? ''); ?>"></div>
+                                <input type="hidden" name="estimated_cost" value="<?php echo $esc($ticket['estimated_cost'] ?? ''); ?>">
+                            </div>
+                            <div class="edit-field" style="margin-top:12px;"><span class="edit-label">Type</span><div class="chip-group"><?php $rowCategories = array_map('trim', explode(',', (string) ($ticket['category'] ?? ''))); foreach ($categories as $category): ?><label><input type="checkbox" name="category[]" value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' checked' : ''; ?>><span><?php echo $esc($category); ?></span></label><?php endforeach; ?></div></div>
+                            <div class="db-form-actions"><button class="save-button" type="submit">Save ticket</button></div>
                         </form>
-                    </td>
-                    <td class="description"><?php echo nl2br($esc($ticket['description'])); ?><?php if ((string) ($ticket['estimated_cost'] ?? '') !== ''): ?><div class="muted" style="margin-top:8px;"><strong>Estimated cost:</strong> <?php echo $esc($ticket['estimated_cost']); ?></div><?php endif; ?><?php if (!empty($ticket['uploads'])): ?><div class="muted" style="margin-top:8px;"><strong>Files:</strong> <?php foreach ($ticket['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a> <?php endforeach; ?></div><?php endif; ?></td>
-                    <td><form method="post" onsubmit="return confirm('Delete this ticket and its files?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_ticket"><input type="hidden" name="ticket_id" value="<?php echo (int) $ticket['id']; ?>"><button class="danger" type="submit">Delete</button></form></td>
-                </tr>
-            <?php endforeach; ?>
-            <?php if (!$tickets): ?><tr><td colspan="5" class="muted">No tickets submitted.</td></tr><?php endif; ?>
-            </tbody>
-        </table></div>
+                        <aside class="tk-body-side db-side">
+                            <div><dt>Description</dt><dd class="db-desc"><?php echo $esc($ticket['description']); ?></dd></div>
+                            <div><dt>Submitted</dt><dd><?php echo $esc($niceDate($ticket['created_at'])); ?></dd></div>
+                            <?php if (!empty($ticket['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($ticket['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
+                            <form method="post" action="db-view.php#tickets" class="db-delete" onsubmit="return confirm('Delete ticket <?php echo $esc($ref); ?> and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_ticket"><input type="hidden" name="ticket_id" value="<?php echo $tid; ?>"><button class="btn-danger" type="submit">Delete ticket</button></form>
+                        </aside>
+                    </div>
+                </div>
+            </details>
+        <?php endforeach; ?>
+        <?php if (!$tickets): ?><div class="tk-empty">No tickets yet.</div><?php endif; ?>
+        <div class="tk-empty db-no-match" hidden>Nothing matches your search.</div>
     </section>
 
-    <section class="panel">
-        <h2>Tasks (<?php echo count($tasks); ?>)</h2>
-        <p class="section-note">Super admins can edit every task field or remove a task and its files.</p>
-        <div class="scroll"><table><thead><tr><th>ID</th><th>Task fields</th><th>Routing</th><th>Delete</th></tr></thead><tbody>
-            <?php foreach ($tasks as $task): ?><tr>
-                <td><?php echo (int) $task['id']; ?></td>
-                <td><form method="post" class="task-edit-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><input type="hidden" name="assignee" value="<?php echo $esc($task['assignee']); ?>"><input type="hidden" name="due_date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"><input type="hidden" name="status" value="<?php echo $esc($task['status']); ?>"><input type="hidden" name="priority" value="<?php echo $esc($task['priority']); ?>"><input type="hidden" name="effort" value="<?php echo $esc($task['effort']); ?>"><input name="name" aria-label="Task name" value="<?php echo $esc($task['name']); ?>" required><textarea name="desc" aria-label="Description" rows="2" placeholder="Description"><?php echo $esc($task['desc'] ?? ''); ?></textarea><input name="type" aria-label="Type" value="<?php echo $esc($task['type']); ?>" placeholder="Type"><button type="submit">Save</button></form></td>
-                <td><form method="post" class="task-routing-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><input type="hidden" name="name" value="<?php echo $esc($task['name']); ?>"><input type="hidden" name="desc" value="<?php echo $esc($task['desc'] ?? ''); ?>"><input type="hidden" name="type" value="<?php echo $esc($task['type']); ?>"><input name="assignee" aria-label="Assignee" value="<?php echo $esc($task['assignee']); ?>" placeholder="Assignee"><input type="date" name="due_date" aria-label="Due date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"><select name="status" aria-label="Status"><?php foreach (['Done','In progress','Not started','On Hold/Waiting for Material'] as $status): ?><option<?php echo ($task['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select><select name="priority" aria-label="Priority"><?php foreach (['','Urgent','High','Medium','Low'] as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($task['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select><select name="effort" aria-label="Effort"><?php foreach (['','Small','Medium','Large'] as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($task['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select><button type="submit">Save</button></form></td>
-                <td><form method="post" onsubmit="return confirm('Delete this task and its files?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo (int) $task['id']; ?>"><button class="danger" type="submit">Delete</button></form></td></tr><?php endforeach; ?>
-            <?php if (!$tasks): ?><tr><td colspan="4" class="muted">No tasks found.</td></tr><?php endif; ?>
-        </tbody></table></div>
+    <!-- Tasks -->
+    <section class="tk-table db-panel" data-panel="tasks" hidden style="--db-cols: minmax(240px, 2.4fr) 140px 110px 130px 100px 70px;">
+        <div class="tk-head db-head" aria-hidden="true"><span>Task</span><span>Assignee</span><span>Due</span><span>Status</span><span>Priority</span><span></span></div>
+        <?php foreach ($tasks as $task):
+            $kid = (int) $task['id'];
+        ?>
+            <details class="db-row" id="db-task-<?php echo $kid; ?>">
+                <summary class="tk-main db-main">
+                    <div class="tk-cell tk-request">
+                        <span class="tk-subject"><?php echo $esc($task['name']); ?></span>
+                        <span class="tk-sub"><span class="tk-ref">#<?php echo $kid; ?></span><?php if (($task['type'] ?? '') !== ''): ?> · <?php echo $esc($task['type']); ?><?php endif; ?></span>
+                    </div>
+                    <div class="tk-cell tk-type" data-label="Assignee"><?php echo ($task['assignee'] ?? '') !== '' ? $esc($task['assignee']) : '<span class="tk-dash">—</span>'; ?></div>
+                    <div class="tk-cell db-muted" data-label="Due"><?php echo ($task['due_date'] ?? '') ? $esc($niceDate($task['due_date'])) : '<span class="tk-dash">—</span>'; ?></div>
+                    <div class="tk-cell" data-label="Status"><span class="status" data-status="<?php echo $esc(strtolower((string) $task['status'])); ?>"><?php echo $esc($task['status'] === 'On Hold/Waiting for Material' ? 'On hold' : $task['status']); ?></span></div>
+                    <div class="tk-cell" data-label="Priority"><?php if (($task['priority'] ?? '') !== ''): ?><span class="badge <?php echo $priorityClass[$task['priority']] ?? 'be'; ?>"><?php echo $esc($task['priority']); ?></span><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
+                    <div class="tk-cell tk-action"><span class="edit-link db-edit-toggle">Edit</span></div>
+                </summary>
+                <div class="db-edit">
+                    <div class="db-edit-grid">
+                        <form method="post" action="db-view.php#tasks" class="db-form">
+                            <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_task"><input type="hidden" name="task_id" value="<?php echo $kid; ?>">
+                            <div class="edit-grid">
+                                <div class="edit-field full"><label for="k-name-<?php echo $kid; ?>">Task name</label><input id="k-name-<?php echo $kid; ?>" name="name" value="<?php echo $esc($task['name']); ?>" required></div>
+                            </div>
+                            <div class="edit-grid edit-grid-4" style="margin-top:12px;">
+                                <div class="edit-field"><label for="k-status-<?php echo $kid; ?>">Status</label><select id="k-status-<?php echo $kid; ?>" name="status"><?php foreach (['Not started', 'In progress', 'On Hold/Waiting for Material', 'Done'] as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($task['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status === 'On Hold/Waiting for Material' ? 'On hold' : $status); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="k-priority-<?php echo $kid; ?>">Priority</label><select id="k-priority-<?php echo $kid; ?>" name="priority"><?php foreach (['', 'Urgent', 'High', 'Medium', 'Low'] as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($task['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="k-effort-<?php echo $kid; ?>">Effort</label><select id="k-effort-<?php echo $kid; ?>" name="effort"><?php foreach (['', 'Small', 'Medium', 'Large'] as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($task['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="k-due-<?php echo $kid; ?>">Due date</label><input id="k-due-<?php echo $kid; ?>" type="date" name="due_date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"></div>
+                                <div class="edit-field"><label for="k-assignee-<?php echo $kid; ?>">Assignee</label><input id="k-assignee-<?php echo $kid; ?>" name="assignee" value="<?php echo $esc($task['assignee']); ?>" placeholder="e.g. Ivan"></div>
+                                <div class="edit-field"><label for="k-type-<?php echo $kid; ?>">Type</label><input id="k-type-<?php echo $kid; ?>" name="type" value="<?php echo $esc($task['type']); ?>" placeholder="e.g. Graphics"></div>
+                            </div>
+                            <div class="edit-field" style="margin-top:12px;"><label for="k-desc-<?php echo $kid; ?>">Description</label><textarea id="k-desc-<?php echo $kid; ?>" name="desc" rows="3" placeholder="Optional"><?php echo $esc($task['desc'] ?? ''); ?></textarea></div>
+                            <div class="db-form-actions"><button class="save-button" type="submit">Save task</button></div>
+                        </form>
+                        <aside class="tk-body-side db-side">
+                            <div><dt>Last updated</dt><dd><?php echo $esc($niceDate($task['updated_at'] ?? '')); ?></dd></div>
+                            <form method="post" action="db-view.php#tasks" class="db-delete" onsubmit="return confirm('Delete this task and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo $kid; ?>"><button class="btn-danger" type="submit">Delete task</button></form>
+                        </aside>
+                    </div>
+                </div>
+            </details>
+        <?php endforeach; ?>
+        <?php if (!$tasks): ?><div class="tk-empty">No tasks yet.</div><?php endif; ?>
+        <div class="tk-empty db-no-match" hidden>Nothing matches your search.</div>
     </section>
 
-    <section class="panel">
-        <h2>Accounts (<?php echo count($users); ?>)</h2>
-        <p class="section-note">Edit usernames or reset passwords here. Roles are fixed: only the existing super-admin remains super-admin.</p>
-        <div class="scroll"><table><thead><tr><th>ID</th><th>Account</th><th>Role</th><th>Created</th><th>Delete</th></tr></thead><tbody>
-            <?php foreach ($users as $account): ?><tr><td><?php echo (int) $account['id']; ?></td><td><form method="post" class="account-edit-form"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_user"><input type="hidden" name="user_id" value="<?php echo (int) $account['id']; ?>"><input name="username" aria-label="Username" value="<?php echo $esc($account['username']); ?>" required><input type="password" name="password" aria-label="New password" placeholder="New password (optional)"><button type="submit">Save</button></form></td><td><?php echo $esc(ucwords(str_replace('_', ' ', $account['role'] ?? 'admin'))); ?></td><td><?php echo $esc($account['created_at']); ?></td><td><?php if ((int) $account['id'] === (int) current_user()['id']): ?><span class="muted">Current account</span><?php else: ?><form method="post" onsubmit="return confirm('Delete this account?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" value="<?php echo (int) $account['id']; ?>"><button class="danger" type="submit">Delete</button></form><?php endif; ?></td></tr><?php endforeach; ?>
-        </tbody></table></div>
+    <!-- Accounts -->
+    <section class="tk-table db-panel" data-panel="accounts" hidden style="--db-cols: minmax(200px, 2fr) 140px 130px 70px;">
+        <div class="tk-head db-head" aria-hidden="true"><span>Account</span><span>Role</span><span>Created</span><span></span></div>
+        <?php foreach ($users as $account):
+            $uid = (int) $account['id'];
+            $isMe = $uid === $currentUserId;
+        ?>
+            <details class="db-row" id="db-user-<?php echo $uid; ?>">
+                <summary class="tk-main db-main">
+                    <div class="tk-cell tk-request"><span class="tk-subject"><?php echo $esc($account['username']); ?><?php if ($isMe): ?> <span class="ticket-pill">You</span><?php endif; ?></span></div>
+                    <div class="tk-cell" data-label="Role"><?php echo $esc(ucwords(str_replace('_', ' ', $account['role'] ?? 'admin'))); ?></div>
+                    <div class="tk-cell db-muted" data-label="Created"><?php echo $esc($niceDate($account['created_at'])); ?></div>
+                    <div class="tk-cell tk-action"><span class="edit-link db-edit-toggle">Edit</span></div>
+                </summary>
+                <div class="db-edit">
+                    <div class="db-edit-grid">
+                        <form method="post" action="db-view.php#accounts" class="db-form">
+                            <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_user"><input type="hidden" name="user_id" value="<?php echo $uid; ?>">
+                            <div class="edit-grid">
+                                <div class="edit-field"><label for="u-name-<?php echo $uid; ?>">Username</label><input id="u-name-<?php echo $uid; ?>" name="username" value="<?php echo $esc($account['username']); ?>" required></div>
+                                <div class="edit-field"><label for="u-pass-<?php echo $uid; ?>">New password</label><input id="u-pass-<?php echo $uid; ?>" type="password" name="password" autocomplete="new-password" placeholder="Leave blank to keep current"></div>
+                            </div>
+                            <div class="db-form-actions"><button class="save-button" type="submit">Save account</button></div>
+                        </form>
+                        <aside class="tk-body-side db-side">
+                            <?php if ($isMe): ?>
+                                <div><dt>Note</dt><dd>You can't delete the account you're signed in with.</dd></div>
+                            <?php else: ?>
+                                <form method="post" action="db-view.php#accounts" class="db-delete" onsubmit="return confirm('Delete the account <?php echo $esc($account['username']); ?>?');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_user"><input type="hidden" name="user_id" value="<?php echo $uid; ?>"><button class="btn-danger" type="submit">Delete account</button></form>
+                            <?php endif; ?>
+                        </aside>
+                    </div>
+                </div>
+            </details>
+        <?php endforeach; ?>
+        <div class="tk-empty db-no-match" hidden>Nothing matches your search.</div>
     </section>
 </main>
+<script>
+(() => {
+    const tabs = Array.from(document.querySelectorAll('[data-tab]'));
+    const panels = Array.from(document.querySelectorAll('[data-panel]'));
+    const search = document.getElementById('dbSearch');
+    let active = 'tickets';
+
+    function applySearch() {
+        const query = search.value.trim().toLowerCase();
+        const panel = panels.find(p => p.dataset.panel === active);
+        const rows = Array.from(panel.querySelectorAll('.db-row'));
+        let shown = 0;
+        rows.forEach(row => {
+            const match = !query || row.querySelector('summary').textContent.toLowerCase().includes(query);
+            row.hidden = !match;
+            if (match) shown++;
+        });
+        panel.querySelector('.db-no-match').hidden = !query || shown > 0;
+    }
+
+    function showTab(name) {
+        active = tabs.some(t => t.dataset.tab === name) ? name : 'tickets';
+        tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.tab === active ? 'true' : 'false'));
+        panels.forEach(p => { p.hidden = p.dataset.panel !== active; });
+        search.placeholder = `Search ${active}…`;
+        history.replaceState(null, '', '#' + active);
+        applySearch();
+    }
+
+    tabs.forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+    search.addEventListener('input', applySearch);
+    window.addEventListener('hashchange', () => showTab(location.hash.slice(1)));
+    showTab((location.hash || '#tickets').slice(1));
+})();
+</script>
 </body>
 </html>

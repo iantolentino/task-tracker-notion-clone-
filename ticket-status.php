@@ -55,87 +55,76 @@ if ($searched && !$errors) {
 }
 
 $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+$niceDate = function ($value): string {
+    $time = strtotime((string) $value);
+    return $time ? date('M j, Y', $time) : '';
+};
 ?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>My tickets - Creatives Ticketing System</title>
+    <title>My tickets - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <style>
-        :root { --navy: #0f172a; --blue: #1450be; --muted: #5b6b85; --border: #d8e1ee; --bg: #f4f7fb; --green: #087f5b; }
-        * { box-sizing: border-box; }
-        body { margin: 0; min-height: 100vh; background: var(--bg); color: var(--navy); font-family: Arial, Helvetica, sans-serif; }
-        a { color: var(--blue); }
-        .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 18px max(24px, calc((100vw - 1060px) / 2)); background: #fff; border-bottom: 1px solid var(--border); }
-        .brand { display: inline-flex; align-items: center; text-decoration: none; }
-        .brand img { display: block; width: 154px; height: 38px; object-fit: contain; object-position: left center; }
-        .topbar nav { display: flex; gap: 16px; font-size: 13px; }
-        .topbar nav a { text-decoration: none; font-weight: 700; }
-        main { max-width: 1060px; margin: 0 auto; padding: 54px 24px 72px; }
-        .hero { max-width: 700px; margin-bottom: 28px; }
-        .eyebrow { margin: 0 0 10px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .13em; text-transform: uppercase; }
-        h1 { margin: 0; font-size: clamp(32px, 5vw, 48px); letter-spacing: -.05em; line-height: 1.02; }
-        .hero p { margin: 15px 0 0; color: var(--muted); line-height: 1.6; }
-        .lookup { display: flex; gap: 12px; max-width: 720px; padding: 20px; background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 12px 28px rgba(27, 63, 128, .07); }
-        .lookup input { flex: 1; min-width: 0; border: 1px solid #bdcadd; border-radius: 10px; padding: 12px; outline: none; font: inherit; font-size: 14px; }
-        .lookup input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(20, 80, 190, .14); }
-        button { min-width: 148px; border: 0; border-radius: 10px; background: var(--blue); color: #fff; cursor: pointer; font: inherit; font-weight: 800; }
-        button:hover { background: #0f43a4; }
-        .help { margin: 10px 0 0; color: var(--muted); font-size: 12px; }
-        .alert { margin: 20px 0; padding: 12px 14px; border-radius: 10px; font-size: 13px; line-height: 1.45; }
-        .alert.error { border: 1px solid #f0b7b7; background: #fff2f2; color: #9f1d1d; }
-        .results { margin-top: 30px; }
-        .results h2 { margin: 0 0 14px; font-size: 21px; }
-        .ticket { margin: 0 0 14px; padding: 22px; background: #fff; border: 1px solid var(--border); border-radius: 16px; box-shadow: 0 10px 24px rgba(27, 63, 128, .06); }
-        .ticket-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
-        .reference { margin: 0 0 6px; color: var(--blue); font-size: 12px; font-weight: 800; letter-spacing: .1em; }
-        .ticket h3 { margin: 0; font-size: 18px; }
-        .status { display: inline-flex; flex: 0 0 auto; padding: 6px 10px; border-radius: 999px; background: #e9f7f1; color: var(--green); font-size: 12px; font-weight: 800; }
-        .meta { display: flex; flex-wrap: wrap; gap: 7px 16px; margin: 15px 0; color: var(--muted); font-size: 12px; }
-        .ticket-description { margin: 0; padding-top: 14px; border-top: 1px solid #e8edf5; color: #334155; font-size: 14px; line-height: 1.6; white-space: pre-wrap; }
-        .attachments { margin-top: 12px; color: var(--muted); font-size: 12px; }
-        .attachments span { display: inline-block; margin: 4px 8px 0 0; padding: 4px 8px; border-radius: 999px; background: #eef2f7; }
-        .empty { padding: 28px; background: #fff; border: 1px dashed #b8c6d9; border-radius: 14px; color: var(--muted); }
-        @media (max-width: 620px) { .topbar { align-items: flex-start; flex-direction: column; } main { padding-top: 36px; } .lookup { flex-direction: column; } button { min-height: 46px; } .ticket-head { flex-direction: column; } }
-    </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
-<body>
+<body class="public-page">
     <header class="topbar">
-        <a class="brand" href="login.php"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></a>
-        <nav aria-label="Ticket navigation"><a href="ticket.php">Submit Ticket</a><a href="ticket-status.php" aria-current="page">See Tickets</a><a href="login.php">Admin sign in</a></nav>
+        <a class="brand" href="ticket.php"><img src="assets/stratastaff-logo.png" alt="Strata Staff"></a>
+        <nav aria-label="Ticket navigation"><a href="ticket.php">Request Form</a><a href="ticket-status.php" aria-current="page">My tickets</a><a class="nav-quiet" href="login.php">Admin</a><button class="theme-toggle icon-only" type="button" data-theme-toggle aria-label="Toggle dark mode" title="Toggle dark mode"><svg class="when-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg class="when-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg></button></nav>
     </header>
-    <main id="main-content">
+    <main id="main-content" class="form-width">
         <section class="hero">
-            <h1>Check your requests.</h1>
-        <p>Enter the same email you used when submitting a ticket. No account or password is needed.</p>
+            <h1>My tickets</h1>
+            <p>Enter the email you used on your request.</p>
         </section>
         <form class="lookup" method="post">
             <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>">
-            <label for="requester_email" class="sr-only" style="position:absolute;left:-9999px;">Work email</label>
+            <label for="requester_email" style="position:absolute;left:-9999px;">Work email</label>
             <input id="requester_email" name="requester_email" type="email" maxlength="255" autocomplete="email" placeholder="you@stratastaff.com" value="<?php echo $esc($email); ?>" required>
-            <button type="submit">View my tickets</button>
+            <button class="btn-lg" type="submit">Find tickets</button>
         </form>
-        <?php if ($databaseError && !$errors): ?><div class="alert error" role="alert"><?php echo $esc($databaseError); ?></div><?php endif; ?>
-        <?php if ($errors): ?><div class="alert error" role="alert"><?php echo $esc(implode(' ', $errors)); ?></div><?php endif; ?>
+        <?php if ($databaseError && !$errors): ?><div class="alert error" role="alert" style="margin-top:20px;"><?php echo $esc($databaseError); ?></div><?php endif; ?>
+        <?php if ($errors): ?><div class="alert error" role="alert" style="margin-top:20px;"><?php echo $esc(implode(' ', $errors)); ?></div><?php endif; ?>
         <?php if ($searched && !$errors): ?>
             <section class="results" aria-live="polite">
-                <h2><?php echo count($rows); ?> ticket<?php echo count($rows) === 1 ? '' : 's'; ?> for <?php echo $esc($email); ?></h2>
                 <?php if (!$rows): ?>
-                    <div class="empty">No tickets found for this email. <a href="ticket.php">Submit a new ticket</a>.</div>
+                    <div class="empty-state">
+                        <p>No tickets yet for <strong><?php echo $esc($email); ?></strong>.</p>
+                        <a class="btn-lg" href="ticket.php">Request Form</a>
+                    </div>
                 <?php else: ?>
+                    <div class="results-head">
+                        <h2><?php echo count($rows); ?> ticket<?php echo count($rows) === 1 ? '' : 's'; ?></h2>
+                        <span><?php echo $esc($email); ?></span>
+                    </div>
                     <?php foreach ($rows as $row): ?>
                         <article class="ticket">
                             <div class="ticket-head">
-                                <div><p class="reference"><?php echo $esc(ticket_reference((int) $row['id'])); ?></p><h3><?php echo $esc($row['subject']); ?></h3></div>
-                                <span class="status"><?php echo $esc($row['status']); ?></span>
+                                <div>
+                                    <p class="reference">Ticket no. <?php echo $esc(ticket_reference((int) $row['id'])); ?> · <?php echo $esc($niceDate($row['created_at'])); ?></p>
+                                    <h3><?php echo $esc($row['subject']); ?></h3>
+                                </div>
+                                <span class="status" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>"><?php echo $esc($row['status']); ?></span>
                             </div>
-                            <div class="meta"><span>Requested by <?php echo $esc($row['requester_name']); ?></span><span><?php echo $esc($row['requester_email']); ?></span><span>Assignee: <?php echo $esc($row['assignee']); ?></span><span>Deadline: <?php echo $esc($row['due_date'] ?: 'Not set'); ?></span><span>Type / category: <?php echo $esc($row['category']); ?><?php if (($row['other_type'] ?? '') !== ''): ?> (<?php echo $esc($row['other_type']); ?>)<?php endif; ?></span><?php if ((string) ($row['estimated_cost'] ?? '') !== ''): ?><span>Estimated cost: <?php echo $esc($row['estimated_cost']); ?></span><?php endif; ?><span>Priority: <?php echo $esc($row['priority'] ?: 'Pending admin triage'); ?></span><span>Effort: <?php echo $esc($row['effort'] ?: 'Pending admin triage'); ?></span><span>Submitted <?php echo $esc($row['created_at']); ?></span><span>Updated <?php echo $esc($row['updated_at']); ?></span></div>
-                            <p class="ticket-description"><?php echo nl2br($esc($row['description'])); ?></p>
-                            <?php if (trim((string) ($row['business_impact'] ?? '')) !== ''): ?><p class="ticket-description"><strong>Business impact:</strong><br><?php echo nl2br($esc($row['business_impact'])); ?></p><?php endif; ?>
-                            <?php if (!empty($row['uploads'])): ?><div class="attachments"><strong>Files:</strong> <?php foreach ($row['uploads'] as $file): ?><span><?php echo $esc($file['name']); ?></span><?php endforeach; ?></div><?php endif; ?>
+                            <ul class="ticket-facts">
+                                <li><strong>With</strong> <?php echo $esc($row['assignee']); ?></li>
+                                <li><strong>Due</strong> <?php echo $esc($row['due_date'] ? $niceDate($row['due_date']) : 'No deadline'); ?></li>
+                                <li><strong>Type</strong> <?php echo $esc($row['category']); ?><?php if (($row['other_type'] ?? '') !== ''): ?> (<?php echo $esc($row['other_type']); ?>)<?php endif; ?></li>
+                                <?php if (($row['priority'] ?? '') !== ''): ?><li><strong>Priority</strong> <?php echo $esc($row['priority']); ?></li><?php endif; ?>
+                            </ul>
+                            <details class="ticket-more">
+                                <summary>Details</summary>
+                                <div class="ticket-more-body">
+                                    <h4>Description</h4>
+                                    <p><?php echo $esc($row['description']); ?></p>
+                                    <?php if (!empty($row['uploads'])): ?><h4>Files</h4><div class="file-list" style="margin-top:4px;"><?php foreach ($row['uploads'] as $file): ?><span><?php echo $esc($file['name']); ?></span><?php endforeach; ?></div><?php endif; ?>
+                                    <h4>Last updated</h4>
+                                    <p><?php echo $esc($niceDate($row['updated_at'])); ?></p>
+                                </div>
+                            </details>
                         </article>
                     <?php endforeach; ?>
                 <?php endif; ?>

@@ -120,13 +120,17 @@ try {
 }
 
 $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
+$niceDate = function ($value): string {
+    $time = strtotime((string) $value);
+    return $time ? date('M j, Y', $time) : '';
+};
 ?>
 <!doctype html>
 <html lang="en">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Tickets - Creatives Ticketing System</title>
+    <title>Tickets - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
     <style>
         body { margin: 0; background: #f8fafc; color: #0f172a; font-family: Arial, Helvetica, sans-serif; }
@@ -171,69 +175,156 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
         .empty { padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #fff; color: #64748b; text-align: center; }
         @media (max-width: 650px) { .heading { align-items: flex-start; flex-direction: column; } .heading-actions, .export-form { width: 100%; justify-content: stretch; } .export-form label, .export-form input, .export-button, .public-link { flex: 1 1 100%; width: 100%; } .public-link { justify-content: center; } .ticket-head { flex-direction: column; } .edit-grid { grid-template-columns: 1fr; } .edit-field.full { grid-column: auto; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20260903d">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tickets-page">
 <?php render_nav('tickets'); ?>
 <main id="main-content">
+    <?php
+    $needsTriage = count(array_filter($rows, fn($r) => trim((string) ($r['priority'] ?? '')) === '' || trim((string) ($r['effort'] ?? '')) === ''));
+    $statusGroup = function (string $status): string {
+        $status = strtolower($status);
+        if (in_array($status, ['resolved', 'closed'], true)) return 'done';
+        if (in_array($status, ['open', 'new'], true)) return 'open';
+        return 'active';
+    };
+    $priorityClass = ['Urgent' => 'bhi', 'High' => 'bhi', 'Normal' => 'be', 'Low' => 'blo'];
+    $groupCounts = ['open' => 0, 'active' => 0, 'done' => 0];
+    foreach ($rows as $r) $groupCounts[$statusGroup((string) $r['status'])]++;
+    ?>
     <div class="heading">
-        <div><h1>Ticket inbox</h1><p class="subtitle"><?php echo count($rows); ?> submitted request<?php echo count($rows) === 1 ? '' : 's'; ?>, newest first. Set both priority and effort to release a ticket to Tasks.</p></div>
-        <div class="heading-actions">
-            <form class="export-form" method="get">
-                <label for="export-start">Submitted from<input id="export-start" name="start_date" type="date" value="<?php echo $esc($exportStart); ?>" required></label>
-                <label for="export-end">Submitted through<input id="export-end" name="end_date" type="date" value="<?php echo $esc($exportEnd); ?>" required></label>
-                <button class="export-button" type="submit" name="export" value="csv">Export tickets</button>
-            </form>
-            <a class="public-link" href="ticket.php" target="_blank" rel="noopener">Open staff portal</a>
+        <div><h1>Tickets</h1><p class="subtitle">Requests submitted through the staff portal.</p></div>
+        <div class="inbox-actions">
+            <details class="export-menu"<?php echo ($exportStart !== '' || $exportEnd !== '') ? ' open' : ''; ?>>
+                <summary class="edit-link">Export CSV</summary>
+                <form class="export-form" method="get">
+                    <label for="export-start">From<input id="export-start" name="start_date" type="date" value="<?php echo $esc($exportStart); ?>" required></label>
+                    <label for="export-end">To<input id="export-end" name="end_date" type="date" value="<?php echo $esc($exportEnd); ?>" required></label>
+                    <button class="export-button" type="submit" name="export" value="csv">Download</button>
+                </form>
+            </details>
+            <a class="public-link" href="ticket.php" target="_blank" rel="noopener">Staff portal ↗</a>
         </div>
     </div>
     <?php if ($error): ?><div class="alert error" role="alert"><?php echo $esc($error); ?></div><?php endif; ?>
     <?php if ($message): ?><div class="alert ok" role="status"><?php echo $esc($message); ?></div><?php endif; ?>
-    <section class="ticket-list" aria-live="polite">
-        <?php if (!$rows && !$error): ?><div class="empty">No tickets have been submitted yet.</div><?php endif; ?>
+
+    <div class="tk-tabs" role="tablist" aria-label="Filter tickets">
+        <button type="button" role="tab" data-filter="all" aria-selected="true">All <span><?php echo count($rows); ?></span></button>
+        <button type="button" role="tab" data-filter="triage" aria-selected="false">Needs triage <span><?php echo $needsTriage; ?></span></button>
+        <button type="button" role="tab" data-filter="open" aria-selected="false">Open <span><?php echo $groupCounts['open']; ?></span></button>
+        <button type="button" role="tab" data-filter="active" aria-selected="false">In progress <span><?php echo $groupCounts['active']; ?></span></button>
+        <button type="button" role="tab" data-filter="done" aria-selected="false">Done <span><?php echo $groupCounts['done']; ?></span></button>
+    </div>
+
+    <section class="tk-table" aria-live="polite">
+        <div class="tk-head" aria-hidden="true"><span>Request</span><span>Type</span><span>Due</span><span>Priority</span><span>Status</span><span></span></div>
+        <?php if (!$rows && !$error): ?><div class="tk-empty">No tickets yet. New requests from the staff portal will appear here.</div><?php endif; ?>
+        <div class="tk-empty" id="tkFilterEmpty" hidden>No tickets in this view.</div>
         <?php foreach ($rows as $row):
             $id = (int) $row['id'];
             $reference = ticket_reference($id);
             $readyForTasks = trim((string) ($row['priority'] ?? '')) !== '' && trim((string) ($row['effort'] ?? '')) !== '';
+            $isEditing = $editId === $id;
+            ob_start();
         ?>
-            <article class="ticket" id="<?php echo $esc($reference); ?>">
-                <div class="ticket-head">
-                    <div><p class="reference"><?php echo $esc($reference); ?></p><h2><?php echo $esc($row['subject']); ?></h2></div>
-                    <span class="status"><?php echo $esc($row['status']); ?></span>
+                <div class="tk-cell tk-request">
+                    <span class="tk-subject"><?php echo $esc($row['subject']); ?></span>
+                    <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($reference); ?></span> · <span title="<?php echo $esc($row['requester_email']); ?>"><?php echo $esc($row['requester_name']); ?></span> · <?php echo $esc($niceDate($row['created_at'])); ?></span>
                 </div>
-                <div class="meta"><span><strong>From:</strong> <?php echo $esc($row['requester_name']); ?> (<?php echo $esc($row['requester_email']); ?>)</span><span><strong>Assignee:</strong> <?php echo $esc($row['assignee']); ?></span><span><strong>Deadline:</strong> <?php echo $esc($row['due_date'] ?: 'Not set'); ?></span><span><strong>Type / category:</strong> <?php echo $esc($row['category']); ?></span><?php if ((string) ($row['other_type'] ?? '') !== ''): ?><span><strong>Other type:</strong> <?php echo $esc($row['other_type']); ?></span><?php endif; ?><?php if ((string) ($row['estimated_cost'] ?? '') !== ''): ?><span><strong>Estimated cost:</strong> <?php echo $esc($row['estimated_cost']); ?></span><?php endif; ?><span><strong>Priority:</strong> <?php echo $esc($row['priority'] ?: 'Not set'); ?></span><span><strong>Effort:</strong> <?php echo $esc($row['effort'] ?: 'Not set'); ?></span><span><strong>Task list:</strong> <?php echo $readyForTasks ? 'Ready' : 'Waiting for priority + effort'; ?></span><span><strong>Submitted:</strong> <?php echo $esc($row['created_at']); ?></span></div>
-                <?php if ($editId === $id): ?>
+                <div class="tk-cell tk-type" data-label="Type"><?php echo $esc($row['category']); ?><?php if ((string) ($row['other_type'] ?? '') !== ''): ?> · <?php echo $esc($row['other_type']); ?><?php endif; ?></div>
+                <div class="tk-cell" data-label="Due"><?php echo $row['due_date'] ? $esc($niceDate($row['due_date'])) : '<span class="tk-dash">—</span>'; ?></div>
+                <div class="tk-cell" data-label="Priority"><?php if ($readyForTasks): ?><span class="badge <?php echo $priorityClass[$row['priority']] ?? 'be'; ?>"><?php echo $esc($row['priority']); ?></span><?php else: ?><span class="triage-badge">Needs triage</span><?php endif; ?></div>
+                <div class="tk-cell" data-label="Status"><?php if ($isEditing): ?><span class="status" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>"><?php echo $esc($row['status']); ?></span><?php else: ?>
+                    <form method="post" class="status-quick" onclick="event.stopPropagation()">
+                        <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="ticket_id" value="<?php echo $id; ?>">
+                        <input type="hidden" name="subject" value="<?php echo $esc($row['subject']); ?>">
+                        <input type="hidden" name="assignee" value="<?php echo $esc($row['assignee']); ?>">
+                        <input type="hidden" name="due_date" value="<?php echo $esc($row['due_date']); ?>">
+                        <input type="hidden" name="estimated_cost" value="<?php echo $esc($row['estimated_cost'] ?? ''); ?>">
+                        <?php foreach (array_intersect($categories, array_map('trim', explode(',', (string) ($row['category'] ?? '')))) as $category): ?><input type="hidden" name="category[]" value="<?php echo $esc($category); ?>"><?php endforeach; ?>
+                        <input type="hidden" name="other_type" value="<?php echo $esc($row['other_type'] ?? ''); ?>">
+                        <input type="hidden" name="priority" value="<?php echo $esc($row['priority'] ?? ''); ?>">
+                        <input type="hidden" name="effort" value="<?php echo $esc($row['effort'] ?? ''); ?>">
+                        <input type="hidden" name="description" value="<?php echo $esc($row['description']); ?>">
+                        <input type="hidden" name="business_impact" value="<?php echo $esc($row['business_impact'] ?? ''); ?>">
+                        <select name="status" class="status-select" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>" aria-label="Status for <?php echo $esc($reference); ?>" onchange="this.form.submit()"><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo $row['status'] === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select>
+                    </form>
+                <?php endif; ?></div>
+                <div class="tk-cell tk-action"><?php if (!$isEditing): ?><a class="edit-link" href="tickets.php?edit=<?php echo $id; ?>#<?php echo $esc($reference); ?>" onclick="event.stopPropagation()"><?php echo $readyForTasks ? 'Edit' : 'Triage'; ?></a><?php endif; ?></div>
+        <?php $rowCells = ob_get_clean(); ?>
+            <article class="tk-row<?php echo $isEditing ? ' is-editing' : ''; ?>" id="<?php echo $esc($reference); ?>" data-group="<?php echo $statusGroup((string) $row['status']); ?>" data-triage="<?php echo $readyForTasks ? '0' : '1'; ?>">
+                <?php if ($isEditing): ?>
+                    <div class="tk-main"><?php echo $rowCells; ?></div>
                     <form method="post" class="edit-form">
                         <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="update_ticket"><input type="hidden" name="ticket_id" value="<?php echo $id; ?>">
-                        <div class="edit-grid">
-                            <div class="edit-field full"><label for="subject-<?php echo $id; ?>">Subject</label><input id="subject-<?php echo $id; ?>" name="subject" maxlength="180" value="<?php echo $esc($row['subject']); ?>" required></div>
-                            <div class="edit-field"><label for="assignee-<?php echo $id; ?>">Assignee</label><select id="assignee-<?php echo $id; ?>" name="assignee" required><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo $row['assignee'] === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
-                            <div class="edit-field"><label for="due-<?php echo $id; ?>">Deadline</label><input id="due-<?php echo $id; ?>" name="due_date" type="date" value="<?php echo $esc($row['due_date']); ?>"></div>
-                            <div class="edit-field"><label for="cost-<?php echo $id; ?>">Estimated cost (optional)</label><input id="cost-<?php echo $id; ?>" name="estimated_cost" type="number" min="0" step="0.01" value="<?php echo $esc($row['estimated_cost'] ?? ''); ?>" placeholder="Optional"></div>
-                            <div class="edit-field"><label for="category-<?php echo $id; ?>">Type / category</label><select id="category-<?php echo $id; ?>" name="category[]" multiple size="5" required><?php $rowCategories = array_map('trim', explode(',', (string) ($row['category'] ?? ''))); foreach ($categories as $category): ?><option value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' selected' : ''; ?>><?php echo $esc($category); ?></option><?php endforeach; ?></select></div>
-                            <div class="edit-field"><label for="other-<?php echo $id; ?>">Other type</label><input id="other-<?php echo $id; ?>" name="other_type" value="<?php echo $esc($row['other_type'] ?? ''); ?>"></div>
+                        <p class="edit-group-title">Triage</p>
+                        <div class="edit-grid edit-grid-4">
                             <div class="edit-field"><label for="priority-<?php echo $id; ?>">Priority</label><select id="priority-<?php echo $id; ?>" name="priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($row['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
                             <div class="edit-field"><label for="effort-<?php echo $id; ?>">Effort</label><select id="effort-<?php echo $id; ?>" name="effort"><?php foreach ($efforts as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($row['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
                             <div class="edit-field"><label for="status-<?php echo $id; ?>">Status</label><select id="status-<?php echo $id; ?>" name="status" required><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo $row['status'] === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select></div>
+                            <div class="edit-field"><label for="assignee-<?php echo $id; ?>">Assignee</label><select id="assignee-<?php echo $id; ?>" name="assignee" required><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo $row['assignee'] === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
+                        </div>
+                        <p class="edit-group-title">Request</p>
+                        <div class="edit-grid">
+                            <div class="edit-field full"><label for="subject-<?php echo $id; ?>">Title</label><input id="subject-<?php echo $id; ?>" name="subject" maxlength="180" value="<?php echo $esc($row['subject']); ?>" required></div>
+                            <div class="edit-field full"><span class="edit-label">Type</span><div class="chip-group"><?php $rowCategories = array_map('trim', explode(',', (string) ($row['category'] ?? ''))); foreach ($categories as $category): ?><label><input type="checkbox" name="category[]" value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' checked' : ''; ?>><span><?php echo $esc($category); ?></span></label><?php endforeach; ?></div></div>
+                            <div class="edit-field"><label for="other-<?php echo $id; ?>">Other type</label><input id="other-<?php echo $id; ?>" name="other_type" value="<?php echo $esc($row['other_type'] ?? ''); ?>" placeholder="Only if Other"></div>
+                            <div class="edit-field"><label for="due-<?php echo $id; ?>">Deadline</label><input id="due-<?php echo $id; ?>" name="due_date" type="date" value="<?php echo $esc($row['due_date']); ?>"></div>
+                            <input type="hidden" name="estimated_cost" value="<?php echo $esc($row['estimated_cost'] ?? ''); ?>">
                             <div class="edit-field full"><label for="description-<?php echo $id; ?>">Description</label><textarea id="description-<?php echo $id; ?>" name="description" required><?php echo $esc($row['description']); ?></textarea></div>
-                            <div class="edit-field full"><label for="impact-<?php echo $id; ?>">Business impact</label><textarea id="impact-<?php echo $id; ?>" name="business_impact"><?php echo $esc($row['business_impact'] ?? ''); ?></textarea></div>
+                            <input type="hidden" name="business_impact" value="<?php echo $esc($row['business_impact'] ?? ''); ?>">
                         </div>
                         <div class="edit-footer"><button class="save-button" type="submit">Save changes</button><a class="cancel-link" href="tickets.php#<?php echo $esc($reference); ?>">Cancel</a></div>
                     </form>
                 <?php else: ?>
-                    <p class="description"><?php echo nl2br($esc($row['description'])); ?></p>
-                    <?php if (!empty($row['uploads'])): ?><div class="attachments"><strong>Files:</strong> <?php foreach ($row['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></div><?php endif; ?>
-                    <?php if (trim((string) ($row['business_impact'] ?? '')) !== ''): ?><p class="description"><strong>Business impact:</strong><br><?php echo nl2br($esc($row['business_impact'])); ?></p><?php endif; ?>
-                    <div class="ticket-actions"><a class="edit-link" href="tickets.php?edit=<?php echo $id; ?>#<?php echo $esc($reference); ?>">Edit ticket</a></div>
+                    <details class="tk-details">
+                        <summary class="tk-main"><?php echo $rowCells; ?></summary>
+                        <div class="tk-body">
+                            <div class="tk-body-main">
+                                <h4>Description</h4>
+                                <p><?php echo $esc($row['description']); ?></p>
+                            </div>
+                            <dl class="tk-body-side">
+                                <div><dt>Requester</dt><dd><?php echo $esc($row['requester_email']); ?></dd></div>
+                                <div><dt>Assignee</dt><dd><?php echo $esc($row['assignee']); ?></dd></div>
+                                <div><dt>Effort</dt><dd><?php echo $esc($row['effort'] ?: '—'); ?></dd></div>
+                                <?php if (!empty($row['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($row['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
+                            </dl>
+                        </div>
+                    </details>
                 <?php endif; ?>
             </article>
         <?php endforeach; ?>
     </section>
 </main>
 <script>
+(() => {
+    const tabs = Array.from(document.querySelectorAll('.tk-tabs [data-filter]'));
+    const rows = Array.from(document.querySelectorAll('.tk-row'));
+    const empty = document.getElementById('tkFilterEmpty');
+    function applyFilter(filter) {
+        let shown = 0;
+        rows.forEach(row => {
+            const match = filter === 'all' || (filter === 'triage' ? row.dataset.triage === '1' : row.dataset.group === filter);
+            row.hidden = !match && !row.classList.contains('is-editing');
+            if (!row.hidden) shown++;
+        });
+        tabs.forEach(tab => tab.setAttribute('aria-selected', tab.dataset.filter === filter ? 'true' : 'false'));
+        empty.hidden = shown > 0 || rows.length === 0;
+        try { sessionStorage.setItem('ticketFilter', filter); } catch (err) {}
+    }
+    tabs.forEach(tab => tab.addEventListener('click', () => applyFilter(tab.dataset.filter)));
+    let saved = 'all';
+    try { saved = sessionStorage.getItem('ticketFilter') || 'all'; } catch (err) {}
+    applyFilter(tabs.some(tab => tab.dataset.filter === saved) ? saved : 'all');
+})();
 setInterval(() => {
     const exportInUse = Array.from(document.querySelectorAll('.export-form input')).some(input => input.value !== '');
-    if (!document.hidden && !document.querySelector('.edit-form') && !exportInUse) window.location.reload();
+    const detailsOpen = document.querySelector('.tk-details[open]');
+    const pickingStatus = document.activeElement && document.activeElement.matches('.status-select');
+    if (!document.hidden && !document.querySelector('.edit-form') && !exportInUse && !detailsOpen && !pickingStatus) window.location.reload();
 }, 10000);
 </script>
 </body>
