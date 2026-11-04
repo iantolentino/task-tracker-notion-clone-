@@ -495,7 +495,7 @@ function normalize_task_input(array $data): array
     if (!in_array($priority, ['', 'Urgent', 'High', 'Medium', 'Low'], true)) {
         throw new InvalidArgumentException('Use a valid priority.');
     }
-    if (!in_array($status, ['Done', 'In progress', 'Not started', 'On Hold/Waiting for Material'], true)) {
+    if (!in_array($status, ['Done', 'In progress', 'Not started', 'On Hold/Waiting for Material', 'Waiting for Approval', 'For Revision'], true)) {
         throw new InvalidArgumentException('Use a valid task status.');
     }
 

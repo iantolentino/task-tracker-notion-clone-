@@ -82,7 +82,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .hint { margin: 18px 0 0; color: #71819a; font-size: 12px; text-align: center; }
         @media (max-width: 760px) { .login-layout { display: block; } .intro { min-height: auto; padding: 42px 28px; } .intro h1 { font-size: 38px; } .feature-tags { display: none; } .sign-in-panel { min-height: 68vh; padding: 28px 20px; } .login-card { padding: 30px 25px; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="login-page">

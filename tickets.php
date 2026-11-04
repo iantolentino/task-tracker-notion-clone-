@@ -7,7 +7,7 @@ $assignees = ['Aiko', 'Ivan', 'Aiko/Ivan'];
 $categories = ['Graphics', 'Marketing', 'Sales Request', 'Project', 'Other'];
 $priorities = ['', 'Low', 'Normal', 'High', 'Urgent'];
 $efforts = ['', 'Small', 'Medium', 'Large'];
-$statuses = ['Open', 'In progress', 'On hold', 'Waiting for material', 'Waiting for budget', 'Resolved', 'Closed', 'New', 'On Hold/Waiting for Material'];
+$statuses = ['Open', 'In progress', 'On hold', 'Waiting for material', 'Waiting for budget', 'Waiting for Approval', 'For Revision', 'Resolved', 'Closed', 'New', 'On Hold/Waiting for Material'];
 $rows = [];
 $error = '';
 $message = '';
@@ -175,14 +175,14 @@ $niceDate = function ($value): string {
         .empty { padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #fff; color: #64748b; text-align: center; }
         @media (max-width: 650px) { .heading { align-items: flex-start; flex-direction: column; } .heading-actions, .export-form { width: 100%; justify-content: stretch; } .export-form label, .export-form input, .export-button, .public-link { flex: 1 1 100%; width: 100%; } .public-link { justify-content: center; } .ticket-head { flex-direction: column; } .edit-grid { grid-template-columns: 1fr; } .edit-field.full { grid-column: auto; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tickets-page">
 <?php render_nav('tickets'); ?>
 <main id="main-content">
     <?php
-    $needsTriage = count(array_filter($rows, fn($r) => trim((string) ($r['priority'] ?? '')) === '' || trim((string) ($r['effort'] ?? '')) === ''));
+    $needsTriage = count(array_filter($rows, fn($r) => trim((string) ($r['priority'] ?? '')) === ''));
     $statusGroup = function (string $status): string {
         $status = strtolower($status);
         if (in_array($status, ['resolved', 'closed'], true)) return 'done';
@@ -225,7 +225,7 @@ $niceDate = function ($value): string {
         <?php foreach ($rows as $row):
             $id = (int) $row['id'];
             $reference = ticket_reference($id);
-            $readyForTasks = trim((string) ($row['priority'] ?? '')) !== '' && trim((string) ($row['effort'] ?? '')) !== '';
+            $readyForTasks = trim((string) ($row['priority'] ?? '')) !== '';
             $isEditing = $editId === $id;
             ob_start();
         ?>
@@ -262,7 +262,7 @@ $niceDate = function ($value): string {
                         <p class="edit-group-title">Triage</p>
                         <div class="edit-grid edit-grid-4">
                             <div class="edit-field"><label for="priority-<?php echo $id; ?>">Priority</label><select id="priority-<?php echo $id; ?>" name="priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($row['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
-                            <div class="edit-field"><label for="effort-<?php echo $id; ?>">Effort</label><select id="effort-<?php echo $id; ?>" name="effort"><?php foreach ($efforts as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($row['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                            <input type="hidden" name="effort" value="<?php echo $esc($row['effort'] ?? ''); ?>">
                             <div class="edit-field"><label for="status-<?php echo $id; ?>">Status</label><select id="status-<?php echo $id; ?>" name="status" required><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo $row['status'] === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select></div>
                             <div class="edit-field"><label for="assignee-<?php echo $id; ?>">Assignee</label><select id="assignee-<?php echo $id; ?>" name="assignee" required><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo $row['assignee'] === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
                         </div>
@@ -289,7 +289,6 @@ $niceDate = function ($value): string {
                             <dl class="tk-body-side">
                                 <div><dt>Requester</dt><dd><?php echo $esc($row['requester_email']); ?></dd></div>
                                 <div><dt>Assignee</dt><dd><?php echo $esc($row['assignee']); ?></dd></div>
-                                <div><dt>Effort</dt><dd><?php echo $esc($row['effort'] ?: '—'); ?></dd></div>
                                 <?php if (!empty($row['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($row['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
                             </dl>
                         </div>

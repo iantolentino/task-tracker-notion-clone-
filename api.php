@@ -21,8 +21,8 @@ try {
         $items = attach_uploads_to_tasks($pdo, array_map('row_to_task', $rows));
         $tickets = attach_uploads_to_tickets($pdo, $pdo->query('SELECT id, requester_name, requester_email, assignee, due_date, ticket_type, estimated_cost, subject, category, priority, description, status, effort, business_impact, other_type, created_at, updated_at FROM tickets ORDER BY id ASC')->fetchAll());
         foreach ($tickets as $ticket) {
-            // A ticket becomes a task only after admin triage configures both fields.
-            if (trim((string) ($ticket['priority'] ?? '')) === '' || trim((string) ($ticket['effort'] ?? '')) === '') {
+            // A ticket becomes a task once admin triage sets its priority.
+            if (trim((string) ($ticket['priority'] ?? '')) === '') {
                 continue;
             }
             $items[] = [

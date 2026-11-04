@@ -22,11 +22,11 @@ Each item is tagged by what it touches, because uploads to the live site are mea
 - [x] **18. Request form description:** "Complete the form and provide the details and materials needed to get started."
 - [x] **19. Disclaimer at the end of the Request Form:** "Please note: Turnaround times may vary depending on the request's complexity, scope, priority, and current workload. Submission of a request does not guarantee immediate completion."
 
-## Batch 2 — Server rules (no new columns)
+## Batch 2 — Server rules (no new columns) — done 2026-11-05, not yet uploaded
 
-- [ ] **5. Add status "Waiting for Approval".** Add it to the allowed status lists in `tickets.php`, `db-view.php` and the Tasks dashboard (status is stored as text, so no column change).
-- [ ] **6. Add status "For Revision".** Same as above.
-- [ ] **9. Remove effort level.** Today a ticket only moves into Tasks once both priority **and effort** are set (`api.php`). Change that rule to priority only, then hide Effort in the forms and lists. Decide whether existing effort values should still show anywhere.
+- [x] **5. Add status "Waiting for Approval".** Add it to the allowed status lists in `tickets.php`, `db-view.php` and the Tasks dashboard (status is stored as text, so no column change).
+- [x] **6. Add status "For Revision".** Same as above.
+- [x] **9. Remove effort level.** Tickets now move into Tasks once a priority is set (`api.php`). Effort is hidden from every screen; existing values are kept in the database (and still appear in the CSV export) in case the admins want them back.
 
 ## Batch 3 — Database changes (back up first)
 
@@ -40,5 +40,5 @@ Each item is tagged by what it touches, because uploads to the live site are mea
 
 1. Department (item 10): which departments should be in the list, or should it be free text?
 2. Comments (item 4): admins only, or can requesters reply too?
-3. Effort (item 9): remove it completely, or just hide it and keep old values in the database?
+3. ~~Effort (item 9)~~ — hidden and old values kept; can be fully removed later if the admins prefer.
 4. Should "Waiting for Approval" and "For Revision" also appear on the requester's My tickets page?

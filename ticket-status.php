@@ -67,7 +67,7 @@ $niceDate = function ($value): string {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My tickets - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="public-page">

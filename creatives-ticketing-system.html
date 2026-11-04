@@ -167,7 +167,7 @@
             .form-grid { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tasks-page">
@@ -191,6 +191,8 @@
             <option>On hold</option>
             <option>Waiting for material</option>
             <option>Waiting for budget</option>
+            <option>Waiting for Approval</option>
+            <option>For Revision</option>
             <option>Resolved</option>
             <option>Closed</option>
             <option value="On Hold/Waiting for Material">On Hold</option>
@@ -218,7 +220,6 @@
                         <th onclick="sort('dueDate')" class="hide-sm">Due <span id="si-dueDate">↕</span></th>
                         <th onclick="sort('status')">Status <span id="si-status">↕</span></th>
                         <th onclick="sort('priority')" class="hide-sm">Priority <span id="si-priority">↕</span></th>
-                        <th class="hide-sm hide-md">Effort</th>
                         <th class="hide-sm">Files</th>
                     </tr>
                 </thead>
@@ -263,6 +264,8 @@
                         <option value="In progress">In Progress</option>
                         <option value="Done">Done</option>
                         <option value="On Hold/Waiting for Material">On Hold / Waiting for Material</option>
+                        <option value="Waiting for Approval">Waiting for Approval</option>
+                        <option value="For Revision">For Revision</option>
                     </select>
                 </div>
                 <div class="fg">
@@ -272,13 +275,7 @@
                         <option>High</option><option>Medium</option><option>Low</option>
                     </select>
                 </div>
-                <div class="fg">
-                    <label>Effort Level</label>
-                    <select id="fEffort">
-                        <option value="">— None —</option>
-                        <option>Small</option><option>Medium</option><option>Large</option>
-                    </select>
-                </div>
+                <input type="hidden" id="fEffort">
                 <div class="fg"><label>Task Type</label><input type="text" id="fType2" placeholder="e.g. Graphics, Marketing"></div>
                 <div class="fg full"><label>Description</label><textarea id="fDesc" placeholder="Optional notes"></textarea></div>
                 <div class="fg full">
@@ -488,7 +485,7 @@ function changePage(delta) {
 // ── Render ───────────────────────────────────────────────────────────────────
 const statusClass = { 'Done':'bd', 'In progress':'bp', 'Not started':'bn', 'On Hold/Waiting for Material':'bh', 'On hold':'bh', 'Waiting for material':'bh', 'Waiting for budget':'bh', 'Waiting for Approval':'ba', 'For Revision':'br', 'Open':'bn', 'New':'bn', 'Resolved':'bd', 'Closed':'bd' };
 const statusLabel = { 'Done':'Done', 'In progress':'In Progress', 'Not started':'Not Started', 'On Hold/Waiting for Material':'On Hold', 'On hold':'On Hold', 'Waiting for material':'Waiting for Material', 'Waiting for budget':'Waiting for Budget', 'Waiting for Approval':'Waiting for Approval', 'For Revision':'For Revision', 'Open':'Open', 'New':'New', 'Resolved':'Resolved', 'Closed':'Closed' };
-const prioClass   = { 'Urgent':'bhi', 'High':'bhi', 'Medium':'bme', 'Low':'blo' };
+const prioClass   = { 'Urgent':'bhi', 'High':'bhi', 'Medium':'bme', 'Normal':'be', 'Low':'blo' };
 
 function badge(cls, txt) { return `<span class="badge ${cls}">${e(txt)}</span>`; }
 
@@ -517,11 +514,13 @@ function render() {
     const start = (currentPage - 1) * pageSize;
     const pageRows = rows.slice(start, start + pageSize);
 
-    const c = {done:0, prog:0, ns:0, hold:0};
+    const c = {done:0, prog:0, ns:0, hold:0, appr:0, rev:0};
     all.forEach(t => {
         if (['Done', 'Resolved', 'Closed'].includes(t.status)) c.done++;
         else if (t.status === 'In progress') c.prog++;
         else if (['On Hold/Waiting for Material', 'On hold', 'Waiting for material', 'Waiting for budget'].includes(t.status)) c.hold++;
+        else if (t.status === 'Waiting for Approval') c.appr++;
+        else if (t.status === 'For Revision') c.rev++;
         else c.ns++;
     });
 
@@ -530,6 +529,8 @@ function render() {
         <div class="stat-card s-prog"><div class="lbl">In Progress</div><div class="val">${c.prog}</div></div>
         <div class="stat-card s-ns"><div class="lbl">Not Started</div><div class="val">${c.ns}</div></div>
         <div class="stat-card s-hold"><div class="lbl">On Hold</div><div class="val">${c.hold}</div></div>
+        <div class="stat-card s-appr"><div class="lbl">Waiting for Approval</div><div class="val">${c.appr}</div></div>
+        <div class="stat-card s-rev"><div class="lbl">For Revision</div><div class="val">${c.rev}</div></div>
         <div class="stat-card s-total"><div class="lbl">Total</div><div class="val">${all.length}</div></div>
     `;
 
@@ -559,7 +560,6 @@ function render() {
             <td class="hide-sm" style="color:${isPastDue(t)?'var(--hi-c)':'var(--muted)'}; white-space:nowrap">${fmtDate(t.dueDate) || '<span class="muted-dash">—</span>'}</td>
             <td>${badge(statusClass[t.status] || 'bn', statusLabel[t.status] || t.status)}</td>
             <td class="hide-sm">${t.priority ? badge(prioClass[t.priority] || '', t.priority) : '<span class="muted-dash">—</span>'}</td>
-            <td class="hide-sm hide-md">${t.effort ? badge('be', t.effort) : '<span class="muted-dash">—</span>'}</td>
             <td class="hide-sm">${t.uploads?.length ? `<span class="files-count" title="${e(t.uploads.map(f => f.name).join(', '))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${t.uploads.length}</span>` : '<span class="muted-dash">—</span>'}</td>
         </tr>
     `).join('');
@@ -591,7 +591,7 @@ async function openDetails(task) {
     const details = [
         ['Status', statusLabel[task.status] || task.status], ['Assignee', task.ticketAssignee || task.assignee || '—'],
         ['Due', fmtDate(task.dueDate) || '—'], ['Priority', task.priority || '—'],
-        ['Effort', task.effort || '—'], ['Type', task.category || task.type || '—'],
+        ['Type', task.category || task.type || '—'],
     ];
     if (task.isTicket) details.push(['Requested by', task.requesterName || task.requesterEmail || '—']);
     if (task.otherType) details.push(['Other type', task.otherType]);

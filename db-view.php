@@ -7,7 +7,7 @@ $assignees = ['Aiko', 'Ivan', 'Aiko/Ivan'];
 $categories = ['Graphics', 'Marketing', 'Sales Request', 'Project', 'Other'];
 $priorities = ['', 'Low', 'Normal', 'High', 'Urgent'];
 $efforts = ['', 'Small', 'Medium', 'Large'];
-$statuses = ['Open', 'In progress', 'On hold', 'Waiting for material', 'Waiting for budget', 'Resolved', 'Closed', 'New', 'On Hold/Waiting for Material'];
+$statuses = ['Open', 'In progress', 'On hold', 'Waiting for material', 'Waiting for budget', 'Waiting for Approval', 'For Revision', 'Resolved', 'Closed', 'New', 'On Hold/Waiting for Material'];
 $message = '';
 $error = '';
 
@@ -173,7 +173,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
         body { margin: 0; }
         <?php echo nav_css(); ?>
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105e">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="db-page">
@@ -220,7 +220,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                             <div class="edit-grid edit-grid-4">
                                 <div class="edit-field"><label for="t-status-<?php echo $tid; ?>">Status</label><select id="t-status-<?php echo $tid; ?>" name="status"><?php foreach ($statuses as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($ticket['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status); ?></option><?php endforeach; ?></select></div>
                                 <div class="edit-field"><label for="t-priority-<?php echo $tid; ?>">Priority</label><select id="t-priority-<?php echo $tid; ?>" name="priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($ticket['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
-                                <div class="edit-field"><label for="t-effort-<?php echo $tid; ?>">Effort</label><select id="t-effort-<?php echo $tid; ?>" name="effort"><?php foreach ($efforts as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($ticket['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <input type="hidden" name="effort" value="<?php echo $esc($ticket['effort'] ?? ''); ?>">
                                 <div class="edit-field"><label for="t-assignee-<?php echo $tid; ?>">Assignee</label><select id="t-assignee-<?php echo $tid; ?>" name="assignee"><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo ($ticket['assignee'] ?? '') === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
                                 <div class="edit-field"><label for="t-due-<?php echo $tid; ?>">Deadline</label><input id="t-due-<?php echo $tid; ?>" type="date" name="due_date" value="<?php echo $esc($ticket['due_date'] ?? ''); ?>"></div>
                                 <input type="hidden" name="estimated_cost" value="<?php echo $esc($ticket['estimated_cost'] ?? ''); ?>">
@@ -268,9 +268,9 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                                 <div class="edit-field full"><label for="k-name-<?php echo $kid; ?>">Task name</label><input id="k-name-<?php echo $kid; ?>" name="name" value="<?php echo $esc($task['name']); ?>" required></div>
                             </div>
                             <div class="edit-grid edit-grid-4" style="margin-top:12px;">
-                                <div class="edit-field"><label for="k-status-<?php echo $kid; ?>">Status</label><select id="k-status-<?php echo $kid; ?>" name="status"><?php foreach (['Not started', 'In progress', 'On Hold/Waiting for Material', 'Done'] as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($task['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status === 'On Hold/Waiting for Material' ? 'On hold' : $status); ?></option><?php endforeach; ?></select></div>
+                                <div class="edit-field"><label for="k-status-<?php echo $kid; ?>">Status</label><select id="k-status-<?php echo $kid; ?>" name="status"><?php foreach (['Not started', 'In progress', 'On Hold/Waiting for Material', 'Waiting for Approval', 'For Revision', 'Done'] as $status): ?><option value="<?php echo $esc($status); ?>"<?php echo ($task['status'] ?? '') === $status ? ' selected' : ''; ?>><?php echo $esc($status === 'On Hold/Waiting for Material' ? 'On hold' : $status); ?></option><?php endforeach; ?></select></div>
                                 <div class="edit-field"><label for="k-priority-<?php echo $kid; ?>">Priority</label><select id="k-priority-<?php echo $kid; ?>" name="priority"><?php foreach (['', 'Urgent', 'High', 'Medium', 'Low'] as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($task['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
-                                <div class="edit-field"><label for="k-effort-<?php echo $kid; ?>">Effort</label><select id="k-effort-<?php echo $kid; ?>" name="effort"><?php foreach (['', 'Small', 'Medium', 'Large'] as $effort): ?><option value="<?php echo $esc($effort); ?>"<?php echo ($task['effort'] ?? '') === $effort ? ' selected' : ''; ?>><?php echo $esc($effort ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
+                                <input type="hidden" name="effort" value="<?php echo $esc($task['effort'] ?? ''); ?>">
                                 <div class="edit-field"><label for="k-due-<?php echo $kid; ?>">Due date</label><input id="k-due-<?php echo $kid; ?>" type="date" name="due_date" value="<?php echo $esc($task['due_date'] ?? ''); ?>"></div>
                                 <div class="edit-field"><label for="k-assignee-<?php echo $kid; ?>">Assignee</label><input id="k-assignee-<?php echo $kid; ?>" name="assignee" value="<?php echo $esc($task['assignee']); ?>" placeholder="e.g. Ivan"></div>
                                 <div class="edit-field"><label for="k-type-<?php echo $kid; ?>">Type</label><input id="k-type-<?php echo $kid; ?>" name="type" value="<?php echo $esc($task['type']); ?>" placeholder="e.g. Graphics"></div>

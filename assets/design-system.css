@@ -220,7 +220,7 @@ body.login-page { background: var(--color-bg) !important; }
 .login-page .login-card { border: 1px solid var(--color-border); border-radius: var(--radius-lg) !important; box-shadow: var(--shadow-md) !important; }
 
 /* Tasks page */
-.tasks-page .stats { grid-template-columns: repeat(5, minmax(130px, 1fr)); }
+.tasks-page .stats { grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); }
 .tasks-page .stat-card { position: relative; overflow: hidden; padding: 17px 18px; }
 .tasks-page .stat-card::before { content: ""; position: absolute; inset: 0 auto 0 0; width: 3px; background: currentColor; opacity: .8; }
 .tasks-page .toolbar { padding: 12px; gap: 8px; flex-wrap: nowrap; }
@@ -517,6 +517,8 @@ td { color: var(--color-text-soft); }
 .tasks-page .s-prog .lbl::before { background: #3b82f6; }
 .tasks-page .s-ns .lbl::before { background: #a1a1aa; }
 .tasks-page .s-hold .lbl::before { background: #eab308; }
+.tasks-page .s-appr .lbl::before { background: #8b5cf6; }
+.tasks-page .s-rev .lbl::before { background: #ef4444; }
 .tasks-page .s-total .lbl::before { background: var(--color-primary); }
 .tasks-page .stat-card .val { color: var(--color-text) !important; font-weight: 600 !important; letter-spacing: -.02em; }
 .detail-kind { color: var(--color-muted) !important; font-family: var(--font-ui) !important; font-weight: 500 !important; }
@@ -725,3 +727,16 @@ td { color: var(--color-text-soft); }
 .app-nav .theme-toggle:hover { background: var(--color-surface-subtle); }
 .public-page .topbar nav { align-items: center; }
 .login-theme { position: fixed; top: 16px; right: 16px; z-index: 5; }
+
+/* Signed-in account, upper right of admin pages */
+.app-topbar { display: flex; align-items: center; justify-content: flex-end; min-height: 60px; padding: 10px clamp(20px, 3vw, 48px); border-bottom: 1px solid var(--color-border); background: var(--color-surface); }
+aside.app-nav ~ .app-topbar { margin-left: var(--sidebar); }
+.app-topbar ~ main { padding-top: 24px !important; }
+.app-account { display: flex; align-items: center; gap: 10px; }
+.app-account > div { display: grid; line-height: 1.25; text-align: right; }
+.app-account strong { color: var(--color-text); font-size: 14px; font-weight: 500 !important; }
+.app-account span:not(.app-avatar) { color: var(--color-muted); font-size: 12px; }
+.app-avatar { order: 2; display: inline-grid; place-items: center; width: 34px; height: 34px; border-radius: 50%; background: var(--color-surface-subtle); border: 1px solid var(--color-border); color: var(--color-text); font-size: 14px; font-weight: 600; }
+@media (max-width: 1023px) {
+    aside.app-nav ~ .app-topbar { margin-left: 0; min-height: 52px; padding: 8px 20px; }
+}

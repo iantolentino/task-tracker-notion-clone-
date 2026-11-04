@@ -92,10 +92,16 @@ function render_nav(string $active = ''): void
         </nav>
         <div class="nav-account">
             <button class="theme-toggle" type="button" data-theme-toggle aria-label="Toggle dark mode"><svg class="when-light" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/></svg><svg class="when-dark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg><span class="when-light">Dark mode</span><span class="when-dark">Light mode</span></button>
-            <div><strong><?php echo htmlspecialchars($user['username'] ?? 'Admin', ENT_QUOTES, 'UTF-8'); ?></strong><span><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $user['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8'); ?></span></div>
             <a class="nav-logout" href="logout.php">Log out</a>
         </div>
     </aside>
+    <?php $username = (string) ($user['username'] ?? 'Admin'); ?>
+    <header class="app-topbar">
+        <div class="app-account" aria-label="Signed in account">
+            <span class="app-avatar" aria-hidden="true"><?php echo htmlspecialchars(strtoupper(substr($username, 0, 1)), ENT_QUOTES, 'UTF-8'); ?></span>
+            <div><strong><?php echo htmlspecialchars($username, ENT_QUOTES, 'UTF-8'); ?></strong><span><?php echo htmlspecialchars(ucwords(str_replace('_', ' ', $user['role'] ?? 'admin')), ENT_QUOTES, 'UTF-8'); ?></span></div>
+        </div>
+    </header>
     <script>
         function toggleAppNav(button) {
             const nav = document.getElementById('appNav');
