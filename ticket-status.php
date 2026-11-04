@@ -1,5 +1,6 @@
 <?php
 require __DIR__ . '/auth.php';
+require __DIR__ . '/comments-view.php';
 
 $email = '';
 $rows = [];
@@ -15,12 +16,37 @@ try {
     $pdo = pdo_connect();
     create_tickets_table($pdo);
     create_uploads_table($pdo);
+    create_ticket_comments_table($pdo);
 } catch (Throwable $e) {
     $pdo = null;
     $databaseError = 'The ticket service is temporarily unavailable. Please try again later.';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && ($_POST['action'] ?? '') === 'reply') {
+    $viewerEmail = strtolower(trim((string) ($_SESSION['ticket_viewer_email'] ?? '')));
+    $ticketId = (int) ($_POST['ticket_id'] ?? 0);
+    try {
+        if (!hash_equals($csrf, (string) ($_POST['csrf'] ?? ''))) {
+            throw new RuntimeException('Your form expired. Refresh the page and try again.');
+        }
+        if ($pdo === null || $viewerEmail === '') {
+            throw new RuntimeException('Look up your tickets again before replying.');
+        }
+        $stmt = $pdo->prepare('SELECT requester_name, requester_email FROM tickets WHERE id = ? LIMIT 1');
+        $stmt->execute([$ticketId]);
+        $ticket = $stmt->fetch();
+        if (!$ticket || strtolower((string) $ticket['requester_email']) !== $viewerEmail) {
+            throw new RuntimeException('You can only reply to your own tickets.');
+        }
+        add_ticket_comment($pdo, $ticketId, 'requester', (string) ($ticket['requester_name'] ?: $viewerEmail), (string) ($_POST['body'] ?? ''));
+        $_SESSION['ticket_lookup_email'] = $viewerEmail;
+        header('Location: ticket-status.php?lookup=1&replied=1#' . ticket_reference($ticketId));
+        exit;
+    } catch (RuntimeException $e) {
+        $errors[] = $e->getMessage();
+        $email = $viewerEmail;
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $searched = true;
     $email = strtolower(trim((string) ($_POST['requester_email'] ?? '')));
     if (!hash_equals($csrf, (string) ($_POST['csrf'] ?? ''))) {
@@ -46,9 +72,10 @@ if (!$searched && ($_GET['lookup'] ?? '') === '1') {
 
 if ($searched && !$errors) {
     try {
-        $stmt = $pdo->prepare('SELECT id, requester_name, requester_email, assignee, due_date, ticket_type, estimated_cost, subject, category, priority, description, effort, business_impact, other_type, status, created_at, updated_at FROM tickets WHERE requester_email = ? ORDER BY id DESC');
+        $stmt = $pdo->prepare('SELECT id, requester_name, requester_email, assignee, due_date, due_time, ticket_type, estimated_cost, subject, category, priority, description, effort, business_impact, other_type, status, created_at, updated_at, completed_at FROM tickets WHERE requester_email = ? ORDER BY id DESC');
         $stmt->execute([$email]);
-        $rows = attach_uploads_to_tickets($pdo, $stmt->fetchAll());
+        $rows = attach_comments_to_tickets($pdo, attach_uploads_to_tickets($pdo, $stmt->fetchAll()));
+        $_SESSION['ticket_viewer_email'] = $email;
     } catch (Throwable $e) {
         $errors[] = 'We could not load your tickets. Please try again.';
     }
@@ -67,7 +94,7 @@ $niceDate = function ($value): string {
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>My tickets - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="public-page">
@@ -101,7 +128,7 @@ $niceDate = function ($value): string {
                         <span><?php echo $esc($email); ?></span>
                     </div>
                     <?php foreach ($rows as $row): ?>
-                        <article class="ticket">
+                        <article class="ticket" id="<?php echo $esc(ticket_reference((int) $row['id'])); ?>">
                             <div class="ticket-head">
                                 <div>
                                     <p class="reference">Ticket no. <?php echo $esc(ticket_reference((int) $row['id'])); ?> · <?php echo $esc($niceDate($row['created_at'])); ?></p>
@@ -111,18 +138,30 @@ $niceDate = function ($value): string {
                             </div>
                             <ul class="ticket-facts">
                                 <li><strong>With</strong> <?php echo $esc($row['assignee']); ?></li>
-                                <li><strong>Due</strong> <?php echo $esc($row['due_date'] ? $niceDate($row['due_date']) : 'No deadline'); ?></li>
+                                <?php if (in_array($row['status'], done_statuses(), true) && !empty($row['completed_at'])): ?>
+                                    <li><strong>Completed</strong> <?php echo $esc($niceDate($row['completed_at'])); ?></li>
+                                <?php else: ?>
+                                    <li><strong>Due</strong> <?php echo $esc($row['due_date'] ? format_deadline($row['due_date'], $row['due_time'] ?? '') : 'No deadline'); ?></li>
+                                <?php endif; ?>
                                 <li><strong>Type</strong> <?php echo $esc($row['category']); ?><?php if (($row['other_type'] ?? '') !== ''): ?> (<?php echo $esc($row['other_type']); ?>)<?php endif; ?></li>
                                 <?php if (($row['priority'] ?? '') !== ''): ?><li><strong>Priority</strong> <?php echo $esc($row['priority']); ?></li><?php endif; ?>
                             </ul>
                             <details class="ticket-more">
-                                <summary>Details</summary>
+                                <summary>Details<?php if (!empty($row['comments'])): ?> · <?php echo count($row['comments']); ?> comment<?php echo count($row['comments']) === 1 ? '' : 's'; ?><?php endif; ?></summary>
                                 <div class="ticket-more-body">
                                     <h4>Description</h4>
                                     <p><?php echo $esc($row['description']); ?></p>
                                     <?php if (!empty($row['uploads'])): ?><h4>Files</h4><div class="file-list" style="margin-top:4px;"><?php foreach ($row['uploads'] as $file): ?><span><?php echo $esc($file['name']); ?></span><?php endforeach; ?></div><?php endif; ?>
                                     <h4>Last updated</h4>
                                     <p><?php echo $esc($niceDate($row['updated_at'])); ?></p>
+                                    <h4 class="comments-title">Comments</h4>
+                                    <?php render_ticket_comments($row['comments'] ?? []); ?>
+                                    <form method="post" class="comment-form">
+                                        <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="reply"><input type="hidden" name="ticket_id" value="<?php echo (int) $row['id']; ?>">
+                                        <label class="sr-only" for="reply-<?php echo (int) $row['id']; ?>">Reply to the team</label>
+                                        <textarea id="reply-<?php echo (int) $row['id']; ?>" name="body" rows="2" maxlength="2000" placeholder="Reply to the team…" required></textarea>
+                                        <button class="btn-lg" type="submit">Send reply</button>
+                                    </form>
                                 </div>
                             </details>
                         </article>
@@ -131,5 +170,10 @@ $niceDate = function ($value): string {
             </section>
         <?php endif; ?>
     </main>
+    <script>
+        if (new URLSearchParams(location.search).has('replied') && location.hash) {
+            document.getElementById(location.hash.slice(1))?.querySelector('details')?.setAttribute('open', '');
+        }
+    </script>
 </body>
 </html>

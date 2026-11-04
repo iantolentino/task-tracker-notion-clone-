@@ -62,6 +62,7 @@ function create_tasks_table(PDO $pdo): void
         ");
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_tasks_due_date ON tasks(due_date)');
+        migrate_tasks_table($pdo);
         return;
     }
 
@@ -82,6 +83,7 @@ function create_tasks_table(PDO $pdo): void
             INDEX idx_tasks_due_date (due_date)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
+    migrate_tasks_table($pdo);
 }
 
 function create_users_table(PDO $pdo): void
@@ -208,7 +210,7 @@ function create_tickets_table(PDO $pdo): void
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 requester_name TEXT NOT NULL,
                 requester_email TEXT NOT NULL,
-                assignee TEXT NOT NULL DEFAULT 'Aiko',
+                assignee TEXT NOT NULL DEFAULT 'Akio',
                 due_date TEXT NOT NULL,
                 ticket_type TEXT NOT NULL,
                 estimated_cost TEXT NOT NULL DEFAULT '',
@@ -227,7 +229,7 @@ function create_tickets_table(PDO $pdo): void
         $columns = $pdo->query('PRAGMA table_info(tickets)')->fetchAll();
         $columnNames = array_map(fn($column) => $column['name'], $columns);
         if (!in_array('assignee', $columnNames, true)) {
-            $pdo->exec("ALTER TABLE tickets ADD COLUMN assignee TEXT NOT NULL DEFAULT 'Aiko'");
+            $pdo->exec("ALTER TABLE tickets ADD COLUMN assignee TEXT NOT NULL DEFAULT 'Akio'");
         }
         if (!in_array('due_date', $columnNames, true)) {
             $pdo->exec("ALTER TABLE tickets ADD COLUMN due_date TEXT NOT NULL DEFAULT ''");
@@ -249,6 +251,7 @@ function create_tickets_table(PDO $pdo): void
         }
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status)');
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_tickets_created_at ON tickets(created_at)');
+        migrate_tickets_table($pdo);
         return;
     }
 
@@ -257,7 +260,7 @@ function create_tickets_table(PDO $pdo): void
             id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
             requester_name VARCHAR(120) NOT NULL,
             requester_email VARCHAR(255) NOT NULL,
-            assignee VARCHAR(120) NOT NULL DEFAULT 'Aiko',
+            assignee VARCHAR(120) NOT NULL DEFAULT 'Akio',
             due_date DATE NULL,
             ticket_type VARCHAR(120) NOT NULL,
             estimated_cost DECIMAL(12,2) NULL,
@@ -276,12 +279,168 @@ function create_tickets_table(PDO $pdo): void
             INDEX idx_tickets_created_at (created_at)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
     ");
-    foreach (['assignee' => "VARCHAR(120) NOT NULL DEFAULT 'Aiko'", 'due_date' => 'DATE NULL', 'ticket_type' => "VARCHAR(120) NOT NULL DEFAULT 'Other'", 'estimated_cost' => 'DECIMAL(12,2) NULL', 'effort' => "VARCHAR(50) NOT NULL DEFAULT ''", 'business_impact' => 'TEXT NULL', 'other_type' => "VARCHAR(255) NOT NULL DEFAULT ''"] as $column => $definition) {
+    foreach (['assignee' => "VARCHAR(120) NOT NULL DEFAULT 'Akio'", 'due_date' => 'DATE NULL', 'ticket_type' => "VARCHAR(120) NOT NULL DEFAULT 'Other'", 'estimated_cost' => 'DECIMAL(12,2) NULL', 'effort' => "VARCHAR(50) NOT NULL DEFAULT ''", 'business_impact' => 'TEXT NULL', 'other_type' => "VARCHAR(255) NOT NULL DEFAULT ''"] as $column => $definition) {
         $columns = $pdo->query("SHOW COLUMNS FROM tickets LIKE '{$column}'")->fetchAll();
         if (!$columns) {
             $pdo->exec("ALTER TABLE tickets ADD COLUMN {$column} {$definition}");
         }
     }
+    migrate_tickets_table($pdo);
+}
+
+/**
+ * Adds any missing columns. $columns maps name => [SQLite definition, MySQL definition].
+ * Returns the names of the columns that were added.
+ */
+function ensure_columns(PDO $pdo, string $table, array $columns): array
+{
+    $sqlite = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite';
+    $existing = $sqlite
+        ? array_map(fn($column) => $column['name'], $pdo->query("PRAGMA table_info({$table})")->fetchAll())
+        : array_map(fn($column) => $column['Field'], $pdo->query("SHOW COLUMNS FROM {$table}")->fetchAll());
+
+    $added = [];
+    foreach ($columns as $name => [$sqliteDefinition, $mysqlDefinition]) {
+        if (!in_array($name, $existing, true)) {
+            $pdo->exec("ALTER TABLE {$table} ADD COLUMN {$name} " . ($sqlite ? $sqliteDefinition : $mysqlDefinition));
+            $added[] = $name;
+        }
+    }
+    return $added;
+}
+
+function migrate_tasks_table(PDO $pdo): void
+{
+    if (in_array('completed_at', ensure_columns($pdo, 'tasks', ['completed_at' => ['TEXT NULL', 'DATETIME NULL']]), true)) {
+        backfill_completed_at($pdo, 'tasks');
+    }
+}
+
+function migrate_tickets_table(PDO $pdo): void
+{
+    $added = ensure_columns($pdo, 'tickets', [
+        'department' => ["TEXT NOT NULL DEFAULT ''", "VARCHAR(120) NOT NULL DEFAULT ''"],
+        'due_time' => ["TEXT NOT NULL DEFAULT ''", "VARCHAR(5) NOT NULL DEFAULT ''"],
+        'completed_at' => ['TEXT NULL', 'DATETIME NULL'],
+    ]);
+    if (in_array('completed_at', $added, true)) {
+        backfill_completed_at($pdo, 'tickets');
+    }
+    // The assignee's name was misspelled as "Aiko"; keep stored tickets in line with the corrected list.
+    $pdo->exec("UPDATE tickets SET assignee = 'Akio' WHERE assignee = 'Aiko'");
+    $pdo->exec("UPDATE tickets SET assignee = 'Akio/Ivan' WHERE assignee = 'Aiko/Ivan'");
+}
+
+function done_statuses(): array
+{
+    return ['Done', 'Resolved', 'Closed'];
+}
+
+/** Finished items from before completion dates were tracked get their last update time. */
+function backfill_completed_at(PDO $pdo, string $table): void
+{
+    $placeholders = implode(',', array_fill(0, count(done_statuses()), '?'));
+    $pdo->prepare("UPDATE {$table} SET completed_at = updated_at WHERE completed_at IS NULL AND status IN ({$placeholders})")
+        ->execute(done_statuses());
+}
+
+/** Records when a task or ticket is first marked done, and clears it if it is reopened. */
+function sync_completed_at(PDO $pdo, string $table, int $id): void
+{
+    $placeholders = implode(',', array_fill(0, count(done_statuses()), '?'));
+    $pdo->prepare("UPDATE {$table} SET completed_at = CASE WHEN status IN ({$placeholders}) THEN COALESCE(completed_at, CURRENT_TIMESTAMP) ELSE NULL END WHERE id = ?")
+        ->execute([...done_statuses(), $id]);
+}
+
+function create_ticket_comments_table(PDO $pdo): void
+{
+    if ($pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite') {
+        $pdo->exec("
+            CREATE TABLE IF NOT EXISTS ticket_comments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                ticket_id INTEGER NOT NULL,
+                author_type TEXT NOT NULL DEFAULT 'admin',
+                author_name TEXT NOT NULL DEFAULT '',
+                body TEXT NOT NULL,
+                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        ");
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_ticket_comments_ticket_id ON ticket_comments(ticket_id)');
+        return;
+    }
+
+    $pdo->exec("
+        CREATE TABLE IF NOT EXISTS ticket_comments (
+            id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+            ticket_id BIGINT UNSIGNED NOT NULL,
+            author_type VARCHAR(20) NOT NULL DEFAULT 'admin',
+            author_name VARCHAR(120) NOT NULL DEFAULT '',
+            body TEXT NOT NULL,
+            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY (id),
+            INDEX idx_ticket_comments_ticket_id (ticket_id)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    ");
+}
+
+function add_ticket_comment(PDO $pdo, int $ticketId, string $authorType, string $authorName, string $body): void
+{
+    $body = trim($body);
+    if ($body === '') {
+        throw new RuntimeException('Write a comment first.');
+    }
+    if (strlen($body) > 2000) {
+        throw new RuntimeException('Keep comments to 2,000 characters or fewer.');
+    }
+    $stmt = $pdo->prepare('INSERT INTO ticket_comments (ticket_id, author_type, author_name, body, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)');
+    $stmt->execute([$ticketId, $authorType === 'requester' ? 'requester' : 'admin', substr($authorName, 0, 120), $body]);
+}
+
+function attach_comments_to_tickets(PDO $pdo, array $tickets): array
+{
+    if (!$tickets) {
+        return [];
+    }
+    $ids = array_map(fn($ticket) => (int) $ticket['id'], $tickets);
+    $placeholders = implode(',', array_fill(0, count($ids), '?'));
+    $stmt = $pdo->prepare("SELECT * FROM ticket_comments WHERE ticket_id IN ({$placeholders}) ORDER BY created_at ASC, id ASC");
+    $stmt->execute($ids);
+    $byTicket = [];
+    foreach ($stmt->fetchAll() as $comment) {
+        $byTicket[(int) $comment['ticket_id']][] = $comment;
+    }
+    foreach ($tickets as &$ticket) {
+        $ticket['comments'] = $byTicket[(int) $ticket['id']] ?? [];
+    }
+    unset($ticket);
+    return $tickets;
+}
+
+/** Returns '' for no time, the HH:MM value when valid, or null when invalid. */
+function normalize_due_time(string $value): ?string
+{
+    $value = trim($value);
+    if ($value === '') {
+        return '';
+    }
+    return preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $value) ? $value : null;
+}
+
+/** "Jan 5, 2026" or "Jan 5, 2026 · 3:00 PM"; '' when there is no date. */
+function format_deadline(?string $date, ?string $time = ''): string
+{
+    $timestamp = strtotime((string) $date);
+    if (!$date || !$timestamp) {
+        return '';
+    }
+    $label = date('M j, Y', $timestamp);
+    if ($time) {
+        $clock = strtotime('2000-01-01 ' . $time);
+        if ($clock) {
+            $label .= ' · ' . date('g:i A', $clock);
+        }
+    }
+    return $label;
 }
 
 function create_task_todos_table(PDO $pdo): void
@@ -452,6 +611,7 @@ function row_to_task(array $row): array
         'type' => $row['type'] ?? '',
         'desc' => $row['desc'] ?? '',
         'updated_at' => $row['updated_at'] ?? '',
+        'completedAt' => $row['completed_at'] ?? '',
     ];
 }
 

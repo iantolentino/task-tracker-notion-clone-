@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS tasks (
     type VARCHAR(255) NOT NULL DEFAULT '',
     `desc` TEXT NOT NULL,
     updated_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
+    completed_at DATETIME NULL,
     PRIMARY KEY (id),
     INDEX idx_tasks_status (status),
     INDEX idx_tasks_due_date (due_date)
@@ -45,8 +46,10 @@ CREATE TABLE IF NOT EXISTS tickets (
     id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     requester_name VARCHAR(120) NOT NULL,
     requester_email VARCHAR(255) NOT NULL,
-    assignee VARCHAR(120) NOT NULL DEFAULT 'Aiko',
+    department VARCHAR(120) NOT NULL DEFAULT '',
+    assignee VARCHAR(120) NOT NULL DEFAULT 'Akio',
     due_date DATE NULL,
+    due_time VARCHAR(5) NOT NULL DEFAULT '',
     ticket_type VARCHAR(120) NOT NULL,
     estimated_cost DECIMAL(12,2) NULL,
     subject VARCHAR(180) NOT NULL,
@@ -59,9 +62,21 @@ CREATE TABLE IF NOT EXISTS tickets (
     status VARCHAR(30) NOT NULL DEFAULT 'Open',
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    completed_at DATETIME NULL,
     PRIMARY KEY (id),
     INDEX idx_tickets_status (status),
     INDEX idx_tickets_created_at (created_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS ticket_comments (
+    id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    ticket_id BIGINT UNSIGNED NOT NULL,
+    author_type VARCHAR(20) NOT NULL DEFAULT 'admin',
+    author_name VARCHAR(120) NOT NULL DEFAULT '',
+    body TEXT NOT NULL,
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id),
+    INDEX idx_ticket_comments_ticket_id (ticket_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE TABLE IF NOT EXISTS task_todos (

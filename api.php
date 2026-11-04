@@ -19,7 +19,7 @@ try {
     if ($method === 'GET' && $id === null) {
         $rows = $pdo->query('SELECT * FROM tasks ORDER BY id ASC')->fetchAll();
         $items = attach_uploads_to_tasks($pdo, array_map('row_to_task', $rows));
-        $tickets = attach_uploads_to_tickets($pdo, $pdo->query('SELECT id, requester_name, requester_email, assignee, due_date, ticket_type, estimated_cost, subject, category, priority, description, status, effort, business_impact, other_type, created_at, updated_at FROM tickets ORDER BY id ASC')->fetchAll());
+        $tickets = attach_uploads_to_tickets($pdo, $pdo->query('SELECT id, requester_name, requester_email, department, assignee, due_date, due_time, ticket_type, estimated_cost, subject, category, priority, description, status, effort, business_impact, other_type, created_at, updated_at, completed_at FROM tickets ORDER BY id ASC')->fetchAll());
         foreach ($tickets as $ticket) {
             // A ticket becomes a task once admin triage sets its priority.
             if (trim((string) ($ticket['priority'] ?? '')) === '') {
@@ -33,6 +33,9 @@ try {
                 'requesterName' => $ticket['requester_name'],
                 'requesterEmail' => $ticket['requester_email'],
                 'dueDate' => $ticket['due_date'],
+                'dueTime' => $ticket['due_time'] ?? '',
+                'department' => $ticket['department'] ?? '',
+                'completedAt' => $ticket['completed_at'] ?? '',
                 'effort' => $ticket['effort'] ?? '',
                 'priority' => $ticket['priority'],
                 'status' => $ticket['status'],
@@ -72,8 +75,10 @@ try {
             ':desc' => $task['desc'],
         ]);
 
+        $newId = (int) $pdo->lastInsertId();
+        sync_completed_at($pdo, 'tasks', $newId);
         $stmt = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
-        $stmt->execute([$pdo->lastInsertId()]);
+        $stmt->execute([$newId]);
         send_json(attach_uploads_to_tasks($pdo, [row_to_task($stmt->fetch())])[0], 201);
     }
 
@@ -105,6 +110,7 @@ try {
             ':desc' => $task['desc'],
             ':id' => (int) $id,
         ]);
+        sync_completed_at($pdo, 'tasks', (int) $id);
 
         $stmt = $pdo->prepare('SELECT * FROM tasks WHERE id = ?');
         $stmt->execute([(int) $id]);

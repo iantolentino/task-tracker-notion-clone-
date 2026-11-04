@@ -28,17 +28,23 @@ Each item is tagged by what it touches, because uploads to the live site are mea
 - [x] **6. Add status "For Revision".** Same as above.
 - [x] **9. Remove effort level.** Tickets now move into Tasks once a priority is set (`api.php`). Effort is hidden from every screen; existing values are kept in the database (and still appear in the CSV export) in case the admins want them back.
 
-## Batch 3 — Database changes (back up first)
+## Batch 3 — Database changes — done 2026-11-05, not yet uploaded
 
-- [ ] **2. Correct "Aiko" → "Akio".** The name is stored in existing tickets and is the column default (`db.php`). Needs: update the assignee lists in `ticket.php`, `tickets.php`, `db-view.php`; change the column default; and run a one-time update on the live data (`Aiko` → `Akio`, `Aiko/Ivan` → `Akio/Ivan`).
-- [ ] **4. Comments on tickets** (if possible). New `ticket_comments` table (ticket, author, text, time) plus a comment box in the ticket details for admins. Decide: should requesters see or add comments on My tickets too?
-- [ ] **8. Show completion date when marked Done.** Add a `completed_at` column, set it when status changes to Done/Resolved/Closed, and clear it if reopened. Older finished tickets won't have a date unless we backfill from their last-updated time.
-- [ ] **10. Add "Department of Requester"** to the request form. New `department` column. Decide: free text or a fixed list of departments? Required or optional?
-- [ ] **12. Optional time on the deadline.** The deadline is stored as a date only. Add an optional `due_time` column (or change to date-time) and a time picker next to the date.
+The database upgrades itself the first time any page loads after upload (new columns and the comments table are added automatically). **Back up `database/creatives-ticketing.sqlite` on the server before uploading.**
+
+- [x] **2. Correct "Aiko" → "Akio".** Assignee lists, the column default and existing tickets (`Aiko` → `Akio`, `Aiko/Ivan` → `Akio/Ivan`) are all updated automatically.
+- [x] **4. Comments on tickets.** New `ticket_comments` table. Admins comment from the ticket's details in the inbox; requesters see the thread on My tickets and can reply. A requester can only reply to tickets under the email they just looked up.
+- [x] **8. Completion date when marked Done.** New `completed_at` column on tickets and tasks, set when the status becomes Done/Resolved/Closed and cleared if reopened. Shown in place of the deadline ("Done Nov 5, 2026") and in details. Items already finished before the upgrade get their last-updated date.
+- [x] **10. Department of Requester.** Optional text box on the Request Form; shown in the inbox, details, database page, Tasks details and the CSV export.
+- [x] **12. Optional time on the deadline.** New `due_time` column and a time picker next to the date on the Request Form and admin edit forms; shown as "Nov 20, 2026 · 3:30 PM".
+
+### Follow-up
+
+- [ ] **Show times in local time.** SQLite stores timestamps in UTC, so comment times (and submitted/completed dates near midnight) show UTC instead of Philippine time. Needs a timezone setting.
 
 ## Questions for the admins
 
-1. Department (item 10): which departments should be in the list, or should it be free text?
-2. Comments (item 4): admins only, or can requesters reply too?
+1. ~~Department (item 10)~~ — optional free-text box.
+2. ~~Comments (item 4)~~ — admins and requesters can both comment.
 3. ~~Effort (item 9)~~ — hidden and old values kept; can be fully removed later if the admins prefer.
 4. Should "Waiting for Approval" and "For Revision" also appear on the requester's My tickets page?

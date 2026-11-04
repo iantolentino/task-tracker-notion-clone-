@@ -740,3 +740,26 @@ aside.app-nav ~ .app-topbar { margin-left: var(--sidebar); }
 @media (max-width: 1023px) {
     aside.app-nav ~ .app-topbar { margin-left: 0; min-height: 52px; padding: 8px 20px; }
 }
+
+/* Batch 3: deadline time, completion date, comments */
+.deadline-pair { display: grid; grid-template-columns: minmax(0, 1fr) 130px; gap: 8px; }
+.tk-done-date, .t-completed { color: var(--tone-green-fg); font-size: 13px; }
+.tk-comments { color: var(--color-text-soft); }
+.comments-title { margin-top: 18px !important; }
+.comment-list { display: grid; gap: 8px; margin: 6px 0 10px; padding: 0; list-style: none; }
+.comment { padding: 10px 12px; border: 1px solid var(--color-border); border-radius: var(--radius-md); background: var(--color-surface); }
+.comment.is-admin { border-left: 3px solid var(--color-primary); }
+.comment-head { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 8px; margin-bottom: 4px; font-size: 12px; }
+.comment-author { color: var(--color-text); font-weight: 500; font-size: 13px; }
+.comment-role { padding: 0 7px; border: 1px solid var(--color-border); border-radius: 999px; color: var(--color-muted); font-size: 11px; line-height: 18px; }
+.comment-head time { margin-left: auto; color: var(--color-muted); }
+.comment-body, .ticket-more-body .comment-body { margin: 0; color: var(--color-text-soft); font-size: 14px; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
+.comment-empty { margin: 4px 0 10px !important; color: var(--color-muted) !important; font-size: 13px; }
+.comment-form { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 8px; margin-top: 6px; }
+.comment-form textarea { width: 100%; min-height: 40px !important; padding: 9px 12px; resize: vertical; font-size: 14px; }
+.comment-form button, .comment-form .btn-lg { width: auto; min-height: 40px !important; height: 40px; padding: 0 16px; font-size: 14px; }
+@media (max-width: 767px) {
+    .comment-form { grid-template-columns: 1fr; }
+    .comment-form button, .comment-form .btn-lg { width: 100%; }
+    .deadline-pair { grid-template-columns: 1fr 1fr; }
+}

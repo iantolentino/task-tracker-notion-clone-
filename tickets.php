@@ -2,8 +2,9 @@
 require __DIR__ . '/auth.php';
 require_login();
 require __DIR__ . '/nav.php';
+require __DIR__ . '/comments-view.php';
 
-$assignees = ['Aiko', 'Ivan', 'Aiko/Ivan'];
+$assignees = ['Akio', 'Ivan', 'Akio/Ivan'];
 $categories = ['Graphics', 'Marketing', 'Sales Request', 'Project', 'Other'];
 $priorities = ['', 'Low', 'Normal', 'High', 'Urgent'];
 $efforts = ['', 'Small', 'Medium', 'Large'];
@@ -24,6 +25,7 @@ try {
     $pdo = pdo_connect();
     create_tickets_table($pdo);
     create_uploads_table($pdo);
+    create_ticket_comments_table($pdo);
 
     if (($_GET['export'] ?? '') === 'csv') {
         $start = parse_due_date($exportStart);
@@ -31,7 +33,7 @@ try {
         if (!$start || !$end) throw new RuntimeException('Choose both a valid start date and end date for the export.');
         if ($start > $end) throw new RuntimeException('The start date must be on or before the end date.');
 
-        $stmt = $pdo->prepare('SELECT id, requester_name, requester_email, assignee, due_date, other_type, category, priority, effort, status, estimated_cost, subject, description, business_impact, created_at, updated_at FROM tickets WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC, id DESC');
+        $stmt = $pdo->prepare('SELECT id, requester_name, requester_email, department, assignee, due_date, due_time, other_type, category, priority, effort, status, estimated_cost, subject, description, business_impact, created_at, updated_at, completed_at FROM tickets WHERE created_at >= ? AND created_at <= ? ORDER BY created_at DESC, id DESC');
         $stmt->execute([$start . ' 00:00:00', $end . ' 23:59:59']);
 
         header('Content-Type: text/csv; charset=utf-8');
@@ -42,9 +44,9 @@ try {
             return $trimmed !== '' && in_array($trimmed[0], ['=', '+', '-', '@'], true) ? "'" . $value : $value;
         };
         $output = fopen('php://output', 'wb');
-        fputcsv($output, ['Reference', 'Task name', 'Requester name', 'Requester email', 'Assignee', 'Deadline', 'Type / category', 'Other type', 'Priority', 'Effort', 'Status', 'Estimated cost', 'Description', 'Business impact', 'Created at', 'Updated at']);
+        fputcsv($output, ['Ticket no.', 'Task name', 'Requester name', 'Requester email', 'Department', 'Assignee', 'Deadline', 'Deadline time', 'Type / category', 'Other type', 'Priority', 'Effort', 'Status', 'Estimated cost', 'Description', 'Business impact', 'Created at', 'Updated at', 'Completed at']);
         while ($row = $stmt->fetch()) {
-            fputcsv($output, array_map($csvValue, [ticket_reference((int) $row['id']), $row['subject'], $row['requester_name'], $row['requester_email'], $row['assignee'], $row['due_date'], $row['category'], $row['other_type'], $row['priority'], $row['effort'], $row['status'], $row['estimated_cost'], $row['description'], $row['business_impact'], $row['created_at'], $row['updated_at']]));
+            fputcsv($output, array_map($csvValue, [ticket_reference((int) $row['id']), $row['subject'], $row['requester_name'], $row['requester_email'], $row['department'], $row['assignee'], $row['due_date'], $row['due_time'], $row['category'], $row['other_type'], $row['priority'], $row['effort'], $row['status'], $row['estimated_cost'], $row['description'], $row['business_impact'], $row['created_at'], $row['updated_at'], $row['completed_at']]));
         }
         fclose($output);
         exit;
@@ -67,6 +69,7 @@ try {
             $assignee = (string) ($_POST['assignee'] ?? '');
             $dueRaw = trim((string) ($_POST['due_date'] ?? ''));
             $dueDate = parse_due_date($dueRaw);
+            $dueTime = normalize_due_time((string) ($_POST['due_time'] ?? ($existing['due_time'] ?? '')));
             $estimatedCost = trim((string) ($_POST['estimated_cost'] ?? ''));
             $rawCategories = $_POST['category'] ?? [];
             $rawCategories = is_array($rawCategories) ? $rawCategories : [$rawCategories];
@@ -85,6 +88,8 @@ try {
             if ($subject === '' || strlen($subject) > 180) throw new RuntimeException('Enter a subject up to 180 characters.');
             if (!in_array($assignee, $assignees, true)) throw new RuntimeException('Choose a valid assignee.');
             if ($dueRaw !== '' && !$dueDate) throw new RuntimeException('Choose a valid due date or leave it blank.');
+            if ($dueTime === null) throw new RuntimeException('Choose a valid deadline time or leave it blank.');
+            if ($dueTime !== '' && !$dueDate) throw new RuntimeException('Add a deadline date to go with the time.');
             if (!$categoryValues && trim((string) ($existing['category'] ?? '')) === '') throw new RuntimeException('Choose at least one category.');
             if (!in_array($priority, $priorities, true)) throw new RuntimeException('Choose a valid priority.');
             if (!in_array($effort, $efforts, true)) throw new RuntimeException('Choose a valid effort.');
@@ -96,23 +101,39 @@ try {
 
             $storedDueDate = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? ($dueDate ?? '') : $dueDate;
             $storedCost = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? $estimatedCost : ($estimatedCost === '' ? null : $estimatedCost);
-            $stmt = $pdo->prepare('UPDATE tickets SET subject = ?, assignee = ?, due_date = ?, ticket_type = ?, estimated_cost = ?, category = ?, priority = ?, effort = ?, description = ?, business_impact = ?, other_type = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-            $stmt->execute([$subject, $assignee, $storedDueDate, $ticketType, $storedCost, $category, $priority, $effort, $description, $businessImpact, $otherType, $status, $ticketId]);
+            $stmt = $pdo->prepare('UPDATE tickets SET subject = ?, assignee = ?, due_date = ?, due_time = ?, ticket_type = ?, estimated_cost = ?, category = ?, priority = ?, effort = ?, description = ?, business_impact = ?, other_type = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            $stmt->execute([$subject, $assignee, $storedDueDate, $dueTime, $ticketType, $storedCost, $category, $priority, $effort, $description, $businessImpact, $otherType, $status, $ticketId]);
+            sync_completed_at($pdo, 'tickets', $ticketId);
             $reference = ticket_reference($ticketId);
             header('Location: tickets.php?updated=' . rawurlencode($reference) . '#' . $reference);
             exit;
         }
+        if (($_POST['action'] ?? '') === 'add_comment') {
+            $ticketId = (int) ($_POST['ticket_id'] ?? 0);
+            $stmt = $pdo->prepare('SELECT id FROM tickets WHERE id = ? LIMIT 1');
+            $stmt->execute([$ticketId]);
+            if (!$stmt->fetch()) {
+                throw new RuntimeException('Ticket not found.');
+            }
+            add_ticket_comment($pdo, $ticketId, 'admin', (string) (current_user()['username'] ?? 'Team'), (string) ($_POST['body'] ?? ''));
+            $reference = ticket_reference($ticketId);
+            header('Location: tickets.php?commented=' . rawurlencode($reference) . '#' . $reference);
+            exit;
+        }
     }
 
-    $rows = attach_uploads_to_tickets($pdo, $pdo->query('SELECT * FROM tickets ORDER BY id DESC')->fetchAll());
+    $rows = attach_comments_to_tickets($pdo, attach_uploads_to_tickets($pdo, $pdo->query('SELECT * FROM tickets ORDER BY id DESC')->fetchAll()));
     if (isset($_GET['updated']) && preg_match('/^TCK-\d{6}$/', $_GET['updated'])) {
         $message = 'Ticket ' . $_GET['updated'] . ' updated.';
+    }
+    if (isset($_GET['commented']) && preg_match('/^TCK-\d{6}$/', $_GET['commented'])) {
+        $message = 'Comment added to ' . $_GET['commented'] . '.';
     }
 } catch (Throwable $e) {
     $error = $e->getMessage() ?: 'Tickets could not be loaded right now.';
     if (!$rows && isset($pdo) && $pdo instanceof PDO) {
         try {
-            $rows = attach_uploads_to_tickets($pdo, $pdo->query('SELECT * FROM tickets ORDER BY id DESC')->fetchAll());
+            $rows = attach_comments_to_tickets($pdo, attach_uploads_to_tickets($pdo, $pdo->query('SELECT * FROM tickets ORDER BY id DESC')->fetchAll()));
         } catch (Throwable $ignored) {
             // Keep the original error visible if the fallback read also fails.
         }
@@ -175,7 +196,7 @@ $niceDate = function ($value): string {
         .empty { padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #fff; color: #64748b; text-align: center; }
         @media (max-width: 650px) { .heading { align-items: flex-start; flex-direction: column; } .heading-actions, .export-form { width: 100%; justify-content: stretch; } .export-form label, .export-form input, .export-button, .public-link { flex: 1 1 100%; width: 100%; } .public-link { justify-content: center; } .ticket-head { flex-direction: column; } .edit-grid { grid-template-columns: 1fr; } .edit-field.full { grid-column: auto; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tickets-page">
@@ -231,10 +252,10 @@ $niceDate = function ($value): string {
         ?>
                 <div class="tk-cell tk-request">
                     <span class="tk-subject"><?php echo $esc($row['subject']); ?></span>
-                    <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($reference); ?></span> · <span title="<?php echo $esc($row['requester_email']); ?>"><?php echo $esc($row['requester_name']); ?></span> · <?php echo $esc($niceDate($row['created_at'])); ?></span>
+                    <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($reference); ?></span> · <span title="<?php echo $esc($row['requester_email']); ?>"><?php echo $esc($row['requester_name']); ?></span><?php if (($row['department'] ?? '') !== ''): ?> · <?php echo $esc($row['department']); ?><?php endif; ?> · <?php echo $esc($niceDate($row['created_at'])); ?><?php if (!empty($row['comments'])): ?> · <span class="tk-comments" title="Comments"><?php echo count($row['comments']); ?> comment<?php echo count($row['comments']) === 1 ? '' : 's'; ?></span><?php endif; ?></span>
                 </div>
                 <div class="tk-cell tk-type" data-label="Type"><?php echo $esc($row['category']); ?><?php if ((string) ($row['other_type'] ?? '') !== ''): ?> · <?php echo $esc($row['other_type']); ?><?php endif; ?></div>
-                <div class="tk-cell" data-label="Due"><?php echo $row['due_date'] ? $esc($niceDate($row['due_date'])) : '<span class="tk-dash">—</span>'; ?></div>
+                <div class="tk-cell" data-label="Due"><?php if (in_array($row['status'], done_statuses(), true) && !empty($row['completed_at'])): ?><span class="tk-done-date">Done <?php echo $esc($niceDate($row['completed_at'])); ?></span><?php elseif ($row['due_date']): ?><?php echo $esc(format_deadline($row['due_date'], $row['due_time'] ?? '')); ?><?php else: ?><span class="tk-dash">—</span><?php endif; ?></div>
                 <div class="tk-cell" data-label="Priority"><?php if ($readyForTasks): ?><span class="badge <?php echo $priorityClass[$row['priority']] ?? 'be'; ?>"><?php echo $esc($row['priority']); ?></span><?php else: ?><span class="triage-badge">Needs triage</span><?php endif; ?></div>
                 <div class="tk-cell" data-label="Status"><?php if ($isEditing): ?><span class="status" data-status="<?php echo $esc(strtolower((string) $row['status'])); ?>"><?php echo $esc($row['status']); ?></span><?php else: ?>
                     <form method="post" class="status-quick" onclick="event.stopPropagation()">
@@ -242,6 +263,7 @@ $niceDate = function ($value): string {
                         <input type="hidden" name="subject" value="<?php echo $esc($row['subject']); ?>">
                         <input type="hidden" name="assignee" value="<?php echo $esc($row['assignee']); ?>">
                         <input type="hidden" name="due_date" value="<?php echo $esc($row['due_date']); ?>">
+                        <input type="hidden" name="due_time" value="<?php echo $esc($row['due_time'] ?? ''); ?>">
                         <input type="hidden" name="estimated_cost" value="<?php echo $esc($row['estimated_cost'] ?? ''); ?>">
                         <?php foreach (array_intersect($categories, array_map('trim', explode(',', (string) ($row['category'] ?? '')))) as $category): ?><input type="hidden" name="category[]" value="<?php echo $esc($category); ?>"><?php endforeach; ?>
                         <input type="hidden" name="other_type" value="<?php echo $esc($row['other_type'] ?? ''); ?>">
@@ -271,7 +293,7 @@ $niceDate = function ($value): string {
                             <div class="edit-field full"><label for="subject-<?php echo $id; ?>">Title</label><input id="subject-<?php echo $id; ?>" name="subject" maxlength="180" value="<?php echo $esc($row['subject']); ?>" required></div>
                             <div class="edit-field full"><span class="edit-label">Type</span><div class="chip-group"><?php $rowCategories = array_map('trim', explode(',', (string) ($row['category'] ?? ''))); foreach ($categories as $category): ?><label><input type="checkbox" name="category[]" value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' checked' : ''; ?>><span><?php echo $esc($category); ?></span></label><?php endforeach; ?></div></div>
                             <div class="edit-field"><label for="other-<?php echo $id; ?>">Other type</label><input id="other-<?php echo $id; ?>" name="other_type" value="<?php echo $esc($row['other_type'] ?? ''); ?>" placeholder="Only if Other"></div>
-                            <div class="edit-field"><label for="due-<?php echo $id; ?>">Deadline</label><input id="due-<?php echo $id; ?>" name="due_date" type="date" value="<?php echo $esc($row['due_date']); ?>"></div>
+                            <div class="edit-field"><label for="due-<?php echo $id; ?>">Deadline</label><div class="deadline-pair"><input id="due-<?php echo $id; ?>" name="due_date" type="date" value="<?php echo $esc($row['due_date']); ?>"><input name="due_time" type="time" aria-label="Deadline time (optional)" value="<?php echo $esc($row['due_time'] ?? ''); ?>"></div></div>
                             <input type="hidden" name="estimated_cost" value="<?php echo $esc($row['estimated_cost'] ?? ''); ?>">
                             <div class="edit-field full"><label for="description-<?php echo $id; ?>">Description</label><textarea id="description-<?php echo $id; ?>" name="description" required><?php echo $esc($row['description']); ?></textarea></div>
                             <input type="hidden" name="business_impact" value="<?php echo $esc($row['business_impact'] ?? ''); ?>">
@@ -285,9 +307,20 @@ $niceDate = function ($value): string {
                             <div class="tk-body-main">
                                 <h4>Description</h4>
                                 <p><?php echo $esc($row['description']); ?></p>
+                                <h4 class="comments-title">Comments</h4>
+                                <?php render_ticket_comments($row['comments'] ?? []); ?>
+                                <form method="post" class="comment-form">
+                                    <input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="add_comment"><input type="hidden" name="ticket_id" value="<?php echo $id; ?>">
+                                    <label class="sr-only" for="comment-<?php echo $id; ?>">Add a comment</label>
+                                    <textarea id="comment-<?php echo $id; ?>" name="body" rows="2" maxlength="2000" placeholder="Write a comment the requester can see…" required></textarea>
+                                    <button class="save-button" type="submit">Comment</button>
+                                </form>
                             </div>
                             <dl class="tk-body-side">
                                 <div><dt>Requester</dt><dd><?php echo $esc($row['requester_email']); ?></dd></div>
+                                <?php if (($row['department'] ?? '') !== ''): ?><div><dt>Department</dt><dd><?php echo $esc($row['department']); ?></dd></div><?php endif; ?>
+                                <?php if ($row['due_date']): ?><div><dt>Deadline</dt><dd><?php echo $esc(format_deadline($row['due_date'], $row['due_time'] ?? '')); ?></dd></div><?php endif; ?>
+                                <?php if (!empty($row['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($row['completed_at'])); ?></dd></div><?php endif; ?>
                                 <div><dt>Assignee</dt><dd><?php echo $esc($row['assignee']); ?></dd></div>
                                 <?php if (!empty($row['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($row['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
                             </dl>
@@ -318,6 +351,9 @@ $niceDate = function ($value): string {
     let saved = 'all';
     try { saved = sessionStorage.getItem('ticketFilter') || 'all'; } catch (err) {}
     applyFilter(tabs.some(tab => tab.dataset.filter === saved) ? saved : 'all');
+    if (new URLSearchParams(location.search).has('commented') && location.hash) {
+        document.getElementById(location.hash.slice(1))?.querySelector('details')?.setAttribute('open', '');
+    }
 })();
 setInterval(() => {
     const exportInUse = Array.from(document.querySelectorAll('.export-form input')).some(input => input.value !== '');

@@ -2,12 +2,14 @@
 require __DIR__ . '/auth.php';
 
 $categories = ['Graphics', 'Marketing', 'Sales Request', 'Project', 'Other'];
-$assignees = ['Aiko', 'Ivan', 'Aiko/Ivan'];
+$assignees = ['Akio', 'Ivan', 'Akio/Ivan'];
 $values = [
     'requester_name' => '',
     'requester_email' => '',
-    'assignee' => 'Aiko',
+    'department' => '',
+    'assignee' => 'Akio',
     'due_date' => '',
+    'due_time' => '',
     'ticket_type' => '',
     'estimated_cost' => '',
     'category' => [],
@@ -61,7 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     if ($portalAction === 'submit_ticket') {
-        foreach (['requester_name', 'requester_email', 'assignee', 'due_date', 'estimated_cost', 'subject', 'description', 'business_impact', 'other_type'] as $key) {
+        foreach (['requester_name', 'requester_email', 'department', 'assignee', 'due_date', 'due_time', 'estimated_cost', 'subject', 'description', 'business_impact', 'other_type'] as $key) {
             $values[$key] = trim((string) ($_POST[$key] ?? $values[$key]));
         }
         $values['requester_email'] = $email;
@@ -82,6 +84,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!in_array($values['assignee'], $assignees, true)) $errors[] = 'Choose a valid assignee.';
         $dueDate = parse_due_date($values['due_date']);
         if ($values['due_date'] !== '' && !$dueDate) $errors[] = 'Choose a valid deadline or leave it blank.';
+        $dueTime = normalize_due_time($values['due_time']);
+        if ($dueTime === null) $errors[] = 'Choose a valid deadline time or leave it blank.';
+        if ($dueTime && !$dueDate) $errors[] = 'Add a deadline date to go with the time.';
+        if (strlen($values['department']) > 120) $errors[] = 'Keep the department to 120 characters or fewer.';
         if ($values['subject'] === '' || strlen($values['subject']) > 180) $errors[] = 'Enter a task name (up to 180 characters).';
         $cost = $values['estimated_cost'];
         if ($cost !== '' && (!preg_match('/^\d+(?:\.\d{1,2})?$/', $cost) || (float) $cost < 0)) $errors[] = 'Estimated cost must be a valid non-negative amount.';
@@ -94,8 +100,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->beginTransaction();
                 $storedDueDate = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? ($dueDate ?? '') : $dueDate;
                 $storedCost = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? $cost : ($cost === '' ? null : $cost);
-                $stmt = $pdo->prepare('INSERT INTO tickets (requester_name, requester_email, assignee, due_date, ticket_type, estimated_cost, subject, category, priority, description, effort, business_impact, other_type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
-                $stmt->execute([$values['requester_name'], $values['requester_email'], $values['assignee'], $storedDueDate, $values['ticket_type'], $storedCost, $values['subject'], implode(', ', $selectedCategories), '', $values['description'], '', $values['business_impact'], $values['other_type'], 'Open']);
+                $stmt = $pdo->prepare('INSERT INTO tickets (requester_name, requester_email, department, assignee, due_date, due_time, ticket_type, estimated_cost, subject, category, priority, description, effort, business_impact, other_type, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)');
+                $stmt->execute([$values['requester_name'], $values['requester_email'], $values['department'], $values['assignee'], $storedDueDate, (string) $dueTime, $values['ticket_type'], $storedCost, $values['subject'], implode(', ', $selectedCategories), '', $values['description'], '', $values['business_impact'], $values['other_type'], 'Open']);
                 $ticketId = (int) $pdo->lastInsertId();
                 save_ticket_uploads($pdo, $ticketId, $_FILES['attachments'] ?? null);
                 $pdo->commit();
@@ -127,7 +133,7 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $createMode ? 'Request Form' : 'Staff portal'; ?> - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="public-page">
@@ -218,12 +224,22 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
                             </div>
                             <div class="field">
                                 <label class="field-label" for="due_date">Deadline <span class="optional">(optional)</span></label>
-                                <input id="due_date" name="due_date" type="date" value="<?php echo $esc($values['due_date']); ?>">
+                                <div class="deadline-pair">
+                                    <input id="due_date" name="due_date" type="date" value="<?php echo $esc($values['due_date']); ?>">
+                                    <input id="due_time" name="due_time" type="time" aria-label="Deadline time (optional)" value="<?php echo $esc($values['due_time']); ?>">
+                                </div>
+                                <p class="field-hint">Time is optional.</p>
                             </div>
                         </div>
-                        <div class="field">
-                            <label class="field-label" for="requester_name">Your name <span class="optional">(optional)</span></label>
-                            <input id="requester_name" name="requester_name" maxlength="120" autocomplete="name" value="<?php echo $esc($values['requester_name']); ?>">
+                        <div class="form-row">
+                            <div class="field">
+                                <label class="field-label" for="requester_name">Your name <span class="optional">(optional)</span></label>
+                                <input id="requester_name" name="requester_name" maxlength="120" autocomplete="name" value="<?php echo $esc($values['requester_name']); ?>">
+                            </div>
+                            <div class="field">
+                                <label class="field-label" for="department">Department <span class="optional">(optional)</span></label>
+                                <input id="department" name="department" maxlength="120" autocomplete="organization-title" placeholder="e.g. HR, Sales, Operations" value="<?php echo $esc($values['department']); ?>">
+                            </div>
                         </div>
                     </div>
 

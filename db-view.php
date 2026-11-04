@@ -3,7 +3,7 @@ require __DIR__ . '/auth.php';
 require_super_admin();
 require __DIR__ . '/nav.php';
 
-$assignees = ['Aiko', 'Ivan', 'Aiko/Ivan'];
+$assignees = ['Akio', 'Ivan', 'Akio/Ivan'];
 $categories = ['Graphics', 'Marketing', 'Sales Request', 'Project', 'Other'];
 $priorities = ['', 'Low', 'Normal', 'High', 'Urgent'];
 $efforts = ['', 'Small', 'Medium', 'Large'];
@@ -23,6 +23,7 @@ try {
     create_uploads_table($pdo);
     create_tickets_table($pdo);
     create_task_todos_table($pdo);
+    create_ticket_comments_table($pdo);
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!hash_equals($csrf, (string) ($_POST['csrf'] ?? ''))) {
@@ -47,6 +48,7 @@ try {
             ]);
             $stmt = $pdo->prepare('UPDATE tasks SET name = ?, assignee = ?, due_date = ?, effort = ?, priority = ?, status = ?, type = ?, `desc` = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
             $stmt->execute([$taskInput['name'], $taskInput['assignee'], $taskInput['due_date'], $taskInput['effort'], $taskInput['priority'], $taskInput['status'], $taskInput['type'], $taskInput['desc'], $taskId]);
+            sync_completed_at($pdo, 'tasks', $taskId);
             $message = $stmt->rowCount() ? 'Task updated.' : 'Task saved.';
         }
 
@@ -80,6 +82,7 @@ try {
             $assignee = $_POST['assignee'] ?? '';
             $dueRaw = trim((string) ($_POST['due_date'] ?? ''));
             $dueDate = parse_due_date($dueRaw);
+            $dueTime = normalize_due_time((string) ($_POST['due_time'] ?? ''));
             $estimatedCost = trim((string) ($_POST['estimated_cost'] ?? ''));
             $priority = (string) ($_POST['priority'] ?? '');
             $effort = (string) ($_POST['effort'] ?? '');
@@ -89,13 +92,17 @@ try {
             $category = implode(', ', $categoryValues);
             $ticketType = in_array('Project', $categoryValues, true) ? 'Project' : (in_array('Other', $categoryValues, true) ? 'Other' : ($categoryValues[0] ?? 'Other'));
             $status = $_POST['status'] ?? 'Open';
+            if ($dueTime === null || ($dueTime !== '' && !$dueDate)) {
+                throw new RuntimeException('Use a valid deadline time, and add a date when you set a time.');
+            }
             if ($ticketId <= 0 || !in_array($assignee, $assignees, true) || ($dueRaw !== '' && !$dueDate) || $category === '' || !in_array($priority, $priorities, true) || !in_array($effort, $efforts, true) || !in_array($status, $statuses, true) || ($estimatedCost !== '' && (!preg_match('/^\d+(?:\.\d{1,2})?$/', $estimatedCost) || (float) $estimatedCost < 0))) {
                 throw new RuntimeException('Use valid routing, deadline, type/category, cost, priority, effort, and status values.');
             }
             $storedDueDate = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? ($dueDate ?? '') : $dueDate;
             $storedCost = $pdo->getAttribute(PDO::ATTR_DRIVER_NAME) === 'sqlite' ? $estimatedCost : ($estimatedCost === '' ? null : $estimatedCost);
-            $stmt = $pdo->prepare('UPDATE tickets SET assignee = ?, due_date = ?, ticket_type = ?, estimated_cost = ?, category = ?, priority = ?, effort = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
-            $stmt->execute([$assignee, $storedDueDate, $ticketType, $storedCost, $category, $priority, $effort, $status, $ticketId]);
+            $stmt = $pdo->prepare('UPDATE tickets SET assignee = ?, due_date = ?, due_time = ?, ticket_type = ?, estimated_cost = ?, category = ?, priority = ?, effort = ?, status = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?');
+            $stmt->execute([$assignee, $storedDueDate, $dueTime, $ticketType, $storedCost, $category, $priority, $effort, $status, $ticketId]);
+            sync_completed_at($pdo, 'tickets', $ticketId);
             $message = 'Ticket updated.';
         }
 
@@ -111,6 +118,7 @@ try {
             }
             $pdo->prepare('DELETE FROM uploads WHERE ticket_id = ?')->execute([$ticketId]);
             $pdo->prepare('DELETE FROM task_todos WHERE ticket_id = ?')->execute([$ticketId]);
+            $pdo->prepare('DELETE FROM ticket_comments WHERE ticket_id = ?')->execute([$ticketId]);
             $stmt = $pdo->prepare('DELETE FROM tickets WHERE id = ?');
             $stmt->execute([$ticketId]);
             $message = $stmt->rowCount() ? 'Ticket deleted.' : 'Ticket not found.';
@@ -173,7 +181,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
         body { margin: 0; }
         <?php echo nav_css(); ?>
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="db-page">
@@ -205,7 +213,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                 <summary class="tk-main db-main">
                     <div class="tk-cell tk-request">
                         <span class="tk-subject"><?php echo $esc($ticket['subject']); ?></span>
-                        <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($ref); ?></span> · <?php echo $esc($ticket['requester_name']); ?> · <?php echo $esc($ticket['requester_email']); ?></span>
+                        <span class="tk-sub">Ticket no. <span class="tk-ref"><?php echo $esc($ref); ?></span> · <?php echo $esc($ticket['requester_name']); ?><?php if (($ticket['department'] ?? '') !== ''): ?> · <?php echo $esc($ticket['department']); ?><?php endif; ?> · <?php echo $esc($ticket['requester_email']); ?></span>
                     </div>
                     <div class="tk-cell" data-label="Assignee"><?php echo $esc($ticket['assignee']); ?></div>
                     <div class="tk-cell" data-label="Status"><span class="status" data-status="<?php echo $esc(strtolower((string) $ticket['status'])); ?>"><?php echo $esc($ticket['status']); ?></span></div>
@@ -222,7 +230,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                                 <div class="edit-field"><label for="t-priority-<?php echo $tid; ?>">Priority</label><select id="t-priority-<?php echo $tid; ?>" name="priority"><?php foreach ($priorities as $priority): ?><option value="<?php echo $esc($priority); ?>"<?php echo ($ticket['priority'] ?? '') === $priority ? ' selected' : ''; ?>><?php echo $esc($priority ?: 'Not set'); ?></option><?php endforeach; ?></select></div>
                                 <input type="hidden" name="effort" value="<?php echo $esc($ticket['effort'] ?? ''); ?>">
                                 <div class="edit-field"><label for="t-assignee-<?php echo $tid; ?>">Assignee</label><select id="t-assignee-<?php echo $tid; ?>" name="assignee"><?php foreach ($assignees as $assignee): ?><option value="<?php echo $esc($assignee); ?>"<?php echo ($ticket['assignee'] ?? '') === $assignee ? ' selected' : ''; ?>><?php echo $esc($assignee); ?></option><?php endforeach; ?></select></div>
-                                <div class="edit-field"><label for="t-due-<?php echo $tid; ?>">Deadline</label><input id="t-due-<?php echo $tid; ?>" type="date" name="due_date" value="<?php echo $esc($ticket['due_date'] ?? ''); ?>"></div>
+                                <div class="edit-field"><label for="t-due-<?php echo $tid; ?>">Deadline</label><div class="deadline-pair"><input id="t-due-<?php echo $tid; ?>" type="date" name="due_date" value="<?php echo $esc($ticket['due_date'] ?? ''); ?>"><input type="time" name="due_time" aria-label="Deadline time (optional)" value="<?php echo $esc($ticket['due_time'] ?? ''); ?>"></div></div>
                                 <input type="hidden" name="estimated_cost" value="<?php echo $esc($ticket['estimated_cost'] ?? ''); ?>">
                             </div>
                             <div class="edit-field" style="margin-top:12px;"><span class="edit-label">Type</span><div class="chip-group"><?php $rowCategories = array_map('trim', explode(',', (string) ($ticket['category'] ?? ''))); foreach ($categories as $category): ?><label><input type="checkbox" name="category[]" value="<?php echo $esc($category); ?>"<?php echo in_array($category, $rowCategories, true) ? ' checked' : ''; ?>><span><?php echo $esc($category); ?></span></label><?php endforeach; ?></div></div>
@@ -231,6 +239,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                         <aside class="tk-body-side db-side">
                             <div><dt>Description</dt><dd class="db-desc"><?php echo $esc($ticket['description']); ?></dd></div>
                             <div><dt>Submitted</dt><dd><?php echo $esc($niceDate($ticket['created_at'])); ?></dd></div>
+                            <?php if (!empty($ticket['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($ticket['completed_at'])); ?></dd></div><?php endif; ?>
                             <?php if (!empty($ticket['uploads'])): ?><div><dt>Files</dt><dd class="tk-files"><?php foreach ($ticket['uploads'] as $file): ?><a href="<?php echo $esc($file['url']); ?>"><?php echo $esc($file['name']); ?></a><?php endforeach; ?></dd></div><?php endif; ?>
                             <form method="post" action="db-view.php#tickets" class="db-delete" onsubmit="return confirm('Delete ticket <?php echo $esc($ref); ?> and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_ticket"><input type="hidden" name="ticket_id" value="<?php echo $tid; ?>"><button class="btn-danger" type="submit">Delete ticket</button></form>
                         </aside>
@@ -280,6 +289,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
                         </form>
                         <aside class="tk-body-side db-side">
                             <div><dt>Last updated</dt><dd><?php echo $esc($niceDate($task['updated_at'] ?? '')); ?></dd></div>
+                            <?php if (!empty($task['completed_at'])): ?><div><dt>Completed</dt><dd><?php echo $esc($niceDate($task['completed_at'])); ?></dd></div><?php endif; ?>
                             <form method="post" action="db-view.php#tasks" class="db-delete" onsubmit="return confirm('Delete this task and its files? This cannot be undone.');"><input type="hidden" name="csrf" value="<?php echo $esc($csrf); ?>"><input type="hidden" name="action" value="delete_task"><input type="hidden" name="task_id" value="<?php echo $kid; ?>"><button class="btn-danger" type="submit">Delete task</button></form>
                         </aside>
                     </div>

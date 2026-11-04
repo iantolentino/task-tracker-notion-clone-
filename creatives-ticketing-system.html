@@ -167,7 +167,7 @@
             .form-grid { grid-template-columns: 1fr; }
         }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105f">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tasks-page">
@@ -503,6 +503,22 @@ function fmtDate(d) {
     return new Date(d + 'T00:00:00').toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'});
 }
 
+function fmtTime(t) {
+    if (!t) return '';
+    return new Date('2000-01-01T' + t + ':00').toLocaleTimeString('en-US', {hour:'numeric', minute:'2-digit'});
+}
+
+function fmtDeadline(task) {
+    const date = fmtDate(task.dueDate);
+    return date && task.dueTime ? `${date} · ${fmtTime(task.dueTime)}` : date;
+}
+
+// Completion timestamps come from the database as "YYYY-MM-DD HH:MM:SS".
+function fmtCompleted(task) {
+    if (!task.completedAt || !['Done', 'Resolved', 'Closed'].includes(task.status)) return '';
+    return fmtDate(task.completedAt.slice(0, 10));
+}
+
 function render() {
     updateClearButton();
     const rows = filtered();
@@ -557,7 +573,7 @@ function render() {
                 </div>
             </td>
             <td>${e(t.isTicket ? t.ticketAssignee : t.assignee) || '<span class="muted-dash">—</span>'}</td>
-            <td class="hide-sm" style="color:${isPastDue(t)?'var(--hi-c)':'var(--muted)'}; white-space:nowrap">${fmtDate(t.dueDate) || '<span class="muted-dash">—</span>'}</td>
+            <td class="hide-sm" style="color:${isPastDue(t)?'var(--hi-c)':'var(--muted)'}; white-space:nowrap">${fmtCompleted(t) ? `<span class="t-completed">Done ${fmtCompleted(t)}</span>` : (fmtDeadline(t) || '<span class="muted-dash">—</span>')}</td>
             <td>${badge(statusClass[t.status] || 'bn', statusLabel[t.status] || t.status)}</td>
             <td class="hide-sm">${t.priority ? badge(prioClass[t.priority] || '', t.priority) : '<span class="muted-dash">—</span>'}</td>
             <td class="hide-sm">${t.uploads?.length ? `<span class="files-count" title="${e(t.uploads.map(f => f.name).join(', '))}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>${t.uploads.length}</span>` : '<span class="muted-dash">—</span>'}</td>
@@ -590,10 +606,12 @@ async function openDetails(task) {
     document.getElementById('detailTitle').textContent = task.name;
     const details = [
         ['Status', statusLabel[task.status] || task.status], ['Assignee', task.ticketAssignee || task.assignee || '—'],
-        ['Due', fmtDate(task.dueDate) || '—'], ['Priority', task.priority || '—'],
+        ['Due', fmtDeadline(task) || '—'], ['Priority', task.priority || '—'],
         ['Type', task.category || task.type || '—'],
     ];
+    if (fmtCompleted(task)) details.splice(1, 0, ['Completed', fmtCompleted(task)]);
     if (task.isTicket) details.push(['Requested by', task.requesterName || task.requesterEmail || '—']);
+    if (task.department) details.push(['Department', task.department]);
     if (task.otherType) details.push(['Other type', task.otherType]);
     const updated = task.updated_at ? new Date(task.updated_at.replace(' ', 'T')) : null;
     if (updated && !isNaN(updated)) details.push(['Updated', updated.toLocaleDateString('en-US', {month:'short', day:'numeric', year:'numeric'})]);
