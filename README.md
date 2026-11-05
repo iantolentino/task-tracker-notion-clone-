@@ -32,7 +32,7 @@ See [docs/LOCAL_SETUP.md](docs/LOCAL_SETUP.md). In short: copy `config.local.exa
 
 ## Deploy
 
-See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). Build an upload package with `scripts\build-release.bat`; it never includes `config.local.php`, a database or uploads. Back up the live database before each update.
+See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). GitHub holds the full system; the server only gets what changed. `scripts\build-release.bat` packages the website files changed since the `live` tag — never docs, sample data, `config.local.php`, a database or uploads. Back up the live database before each update.
 
 ## Project layout
 
@@ -41,7 +41,7 @@ assets/            Shared stylesheet (design-system.css), theme switch (theme.js
 database/          SQLite file lives here on the server (blocked from the web)
 uploads/           Uploaded attachments (blocked from direct access)
 docs/              Setup, deployment and the admin request to-do list
-scripts/           build-release.bat (creates the cPanel upload zip in release/)
+scripts/           build-release.bat/.ps1 (cPanel upload zip of changed files, in release/)
 *.php              Pages and the JSON endpoints (api.php, todos.php, task-upload.php, upload.php)
 db.php, auth.php   Database helpers, automatic schema upgrades, sign-in/session handling
 comments-view.php  Shared comment thread markup
