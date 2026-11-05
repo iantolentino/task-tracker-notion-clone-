@@ -47,4 +47,4 @@ The database upgrades itself the first time any page loads after upload (new col
 1. ~~Department (item 10)~~ — optional free-text box.
 2. ~~Comments (item 4)~~ — admins and requesters can both comment.
 3. ~~Effort (item 9)~~ — hidden and old values kept; can be fully removed later if the admins prefer.
-4. Should "Waiting for Approval" and "For Revision" also appear on the requester's My tickets page?
+4. ~~New statuses on My tickets~~ — yes: requesters see the ticket's actual status, with the same colors as the admin pages.

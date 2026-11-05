@@ -2,6 +2,26 @@
 
 Target URL: `https://stratastaff.com/tickets/creative/`
 
+## Updating the live site
+
+Use this when the site is already running. The upload package is built with `scripts\build-release.bat` (or the command inside it) and lands in `release/`.
+
+1. **Back up first.** In File Manager, open `public_html/tickets/creative/database/`, right-click `creatives-ticketing.sqlite` and download it. Keep it until the update is confirmed working.
+2. **Upload the package.** Upload `release/mmts-update-<date>.zip` to `public_html/tickets/creative/` and extract it there, choosing to overwrite existing files.
+   - The package never contains `config.local.php`, a database file or uploaded attachments, so the live settings, data and files are left untouched.
+3. **Open the site once.** Visit the URL and sign in. The first page load upgrades the database automatically:
+   - adds the `department`, `due_time` and `completed_at` columns and the `ticket_comments` table
+   - renames the assignee "Aiko" to "Akio" on existing tickets
+   - gives already-finished tickets and tasks a completion date (their last-updated time)
+4. **Check.** Open Tasks, Tickets and the Request Form; switch dark mode on and off; add a test comment on a ticket and delete it from the Database page afterwards.
+5. **Hard refresh** (Ctrl + F5) if a page still looks old; the stylesheet version changes with each update.
+
+**If something goes wrong:** upload the backed-up `creatives-ticketing.sqlite` back into `database/` and re-upload the previous version of the files.
+
+Times are shown in the zone set by `timezone` in `config.php` (default `Asia/Manila`). To change it, add `'timezone' => 'Area/City'` to the server's `config.local.php`.
+
+## First-time install
+
 1. In File Manager, create `public_html/tickets/creative` and upload the project files there.
 2. Do not upload a local SQLite database or `config.local.php`.
 3. Copy `config.local.example.php` to `config.local.php` on the server and set a unique super-admin username and a password of at least 12 characters.

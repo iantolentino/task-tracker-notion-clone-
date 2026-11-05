@@ -71,6 +71,7 @@ try {
     create_uploads_table($pdo);
     create_tickets_table($pdo);
     create_task_todos_table($pdo);
+    create_ticket_comments_table($pdo);
     ensure_default_admin($pdo);
     $inserted = import_seed_csv($pdo);
     $total = (int) $pdo->query('SELECT COUNT(*) FROM tasks')->fetchColumn();
