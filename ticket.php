@@ -133,7 +133,7 @@ $esc = fn($value) => htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?php echo $createMode ? 'Request Form' : 'Staff portal'; ?> - Multimedia and Marketing Ticketing System</title>
     <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="public-page">

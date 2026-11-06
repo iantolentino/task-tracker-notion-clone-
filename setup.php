@@ -98,7 +98,7 @@ try {
         code { background: #f1f5f9; padding: 2px 6px; border-radius: 4px; }
         a { color: #2563eb; }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body>

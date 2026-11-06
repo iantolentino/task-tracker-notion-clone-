@@ -197,7 +197,7 @@ $niceDate = function ($value): string {
         .empty { padding: 42px 20px; border: 1px dashed #cbd5e1; border-radius: 12px; background: #fff; color: #64748b; text-align: center; }
         @media (max-width: 650px) { .heading { align-items: flex-start; flex-direction: column; } .heading-actions, .export-form { width: 100%; justify-content: stretch; } .export-form label, .export-form input, .export-button, .public-link { flex: 1 1 100%; width: 100%; } .public-link { justify-content: center; } .ticket-head { flex-direction: column; } .edit-grid { grid-template-columns: 1fr; } .edit-field.full { grid-column: auto; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="tickets-page">

@@ -68,21 +68,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .feature-tags span { border: 1px solid rgba(255,255,255,.35); border-radius: 999px; padding: 9px 13px; font-size: 12px; font-weight: 700; }
         .sign-in-panel { display: grid; place-items: center; padding: 32px; background: radial-gradient(circle at 45% 45%, #f8fbff 0%, var(--panel) 62%, #e7effc 100%); }
         .login-card { width: min(410px, 100%); padding: 35px; border-radius: 18px; background: #fff; box-shadow: 0 20px 45px rgba(27, 63, 128, .13); }
-        .brand-logo { width: 205px; height: 42px; margin: 0 0 25px; overflow: hidden; }
-        .brand-logo img { display: block; width: 100%; height: 100%; object-fit: contain; object-position: left center; }
+        .brand-logo { display: flex; justify-content: center; margin: 0 0 24px; padding: 4px 0 24px; border-bottom: 1px solid var(--color-border, #e4e4e7); }
+        .brand-logo img { display: block; width: 210px; max-width: 100%; height: auto; }
+        .login-card h2, .subcopy { text-align: center; }
         .access-label { margin-bottom: 8px; color: var(--blue); }
         .login-card h2 { margin: 0; font-size: 32px; line-height: 1.05; letter-spacing: -.04em; }
         .subcopy { margin: 10px 0 24px; color: var(--muted); font-size: 14px; line-height: 1.5; }
         label { display: block; margin: 17px 0 8px; color: #0d2045; font-size: 13px; font-weight: 800; }
         input { width: 100%; height: 46px; border: 1px solid #c4d0e3; border-radius: 12px; padding: 10px 13px; outline: none; color: var(--ink); font: inherit; transition: border-color .15s, box-shadow .15s; }
         input:focus { border-color: #1760ce; box-shadow: 0 0 0 3px rgba(23,96,206,.15); }
-        button { width: 100%; margin-top: 23px; min-height: 47px; border: 0; border-radius: 12px; background: #1450be; box-shadow: 0 9px 18px rgba(17,72,177,.24); color: #fff; cursor: pointer; font: inherit; font-size: 14px; font-weight: 800; transition: background .15s, transform .15s; }
-        button:hover { background: #0f43a4; transform: translateY(-1px); }
+        .login-card button { width: 100%; margin-top: 23px; min-height: 47px; border: 0; border-radius: 12px; background: #1450be; box-shadow: 0 9px 18px rgba(17,72,177,.24); color: #fff; cursor: pointer; font: inherit; font-size: 14px; font-weight: 800; transition: background .15s, transform .15s; }
+        .login-card button:hover { background: #0f43a4; transform: translateY(-1px); }
         .error { margin: 0 0 16px; padding: 10px 12px; border: 1px solid #f1b7b7; border-radius: 10px; background: #fff2f2; color: #a71f1f; font-size: 13px; }
         .hint { margin: 18px 0 0; color: #71819a; font-size: 12px; text-align: center; }
         @media (max-width: 760px) { .login-layout { display: block; } .intro { min-height: auto; padding: 42px 28px; } .intro h1 { font-size: 38px; } .feature-tags { display: none; } .sign-in-panel { min-height: 68vh; padding: 28px 20px; } .login-card { padding: 30px 25px; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="login-page">

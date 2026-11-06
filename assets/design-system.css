@@ -56,7 +56,7 @@ aside.app-nav {
     background: var(--color-surface); border-right: 1px solid var(--color-border);
 }
 .app-nav .nav-left { display: flex; align-items: center; justify-content: space-between; padding: 0 8px 24px; }
-.app-nav .nav-brand img { width: 164px; height: 40px; object-fit: contain; object-position: left center; }
+.app-nav .nav-brand img { width: 168px; max-width: 100%; height: auto; }
 .app-nav .nav-links { display: grid; gap: 4px; align-content: start; }
 .app-nav .nav-link, .app-nav .nav-logout {
     min-height: 44px; display: flex; align-items: center; padding: 0 12px;
@@ -98,7 +98,7 @@ tbody tr { transition: background .14s ease; }
     min-height: 72px; padding: 14px max(20px, calc((100vw - 1120px) / 2)) !important;
     border-color: var(--color-border) !important; position: sticky; top: 0; z-index: 30;
 }
-.topbar .brand img { width: 164px !important; height: 40px !important; }
+.topbar .brand img { width: 176px !important; height: auto !important; }
 .topbar nav { align-items: center; gap: 6px !important; }
 .topbar nav a { min-height: 40px; display: inline-flex; align-items: center; padding: 0 10px; border-radius: var(--radius-sm); color: var(--color-text-soft); }
 .topbar nav a:hover, .topbar nav a[aria-current="page"] { background: var(--color-surface-subtle); color: var(--color-primary); }
@@ -113,7 +113,7 @@ tbody tr { transition: background .14s ease; }
 .public-page { margin: 0; min-height: 100vh; }
 .public-page .topbar { display: flex; align-items: center; justify-content: space-between; gap: 20px; background: var(--color-surface); border-bottom: 1px solid var(--color-border); }
 .public-page .brand { display: inline-flex; align-items: center; }
-.public-page .brand img { display: block; object-fit: contain; object-position: left center; }
+.public-page .brand img { display: block; max-width: 100%; }
 .public-page .topbar nav { display: flex; font-size: 14px; }
 .public-page .topbar nav a { text-decoration: none; font-weight: 600; }
 .public-page .topbar nav .nav-quiet { color: var(--color-muted); font-weight: 500; }
@@ -365,10 +365,11 @@ body.login-page { background: var(--color-bg) !important; }
     .topbar + main { padding: 30px 16px 52px !important; }
     .public-page .topbar { flex-direction: row; align-items: center !important; }
     .public-page .topbar nav { width: auto; }
-    .public-page .topbar { padding: 10px 12px !important; gap: 8px; }
+    .public-page .topbar { padding: 10px 10px 10px 12px !important; gap: 4px; }
     .public-page .topbar nav { gap: 0 !important; flex-wrap: nowrap; }
-    .public-page .topbar nav a { flex: 0 0 auto; padding: 0 7px; font-size: 13px; }
-    .public-page .brand img { width: 128px !important; height: 34px !important; }
+    .public-page .topbar nav a { flex: 0 0 auto; padding: 0 6px; font-size: 12.5px; }
+    .public-page .brand { flex: 0 0 auto; }
+    .public-page .brand img { width: 104px !important; height: auto !important; }
     .public-page .card { padding: 20px; }
     .portal-actions, .form-row { grid-template-columns: 1fr; }
     .form-footer { flex-direction: column-reverse; align-items: stretch; }
@@ -712,9 +713,8 @@ td { color: var(--color-text-soft); }
 :root[data-theme="dark"] .error { background: var(--tone-red-bg) !important; color: var(--tone-red-fg) !important; border-color: var(--tone-red-bd) !important; }
 :root[data-theme="dark"] .muted-dash { color: var(--color-dash); }
 :root[data-theme="dark"] .overlay { background: rgba(0, 0, 0, .65) !important; }
-:root[data-theme="dark"] .nav-brand img, :root[data-theme="dark"] .brand img, :root[data-theme="dark"] .brand-logo img {
-    padding: 4px 8px; border-radius: var(--radius-sm); background: #fff;
-}
+/* Strata Staff logo: plain white in dark mode */
+:root[data-theme="dark"] .brand-logo img, :root[data-theme="dark"] .brand img, :root[data-theme="dark"] .nav-brand img { filter: brightness(0) invert(1); }
 
 /* Theme toggle button */
 .theme-toggle { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 36px !important; padding: 0 10px; border: 1px solid var(--color-border); border-radius: var(--radius-md) !important; background: var(--color-surface); color: var(--color-text-soft); cursor: pointer; font-size: 13px; }

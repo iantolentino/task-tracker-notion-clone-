@@ -181,7 +181,7 @@ $currentUserId = (int) (current_user()['id'] ?? 0);
         body { margin: 0; }
         <?php echo nav_css(); ?>
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="db-page">

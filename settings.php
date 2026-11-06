@@ -138,7 +138,7 @@ $users = $pdo->query('SELECT id, username, role, created_at FROM users ORDER BY 
         th { color: #64748b; font-size: 11px; text-transform: uppercase; }
         @media (max-width: 760px) { .grid { grid-template-columns: 1fr; } }
     </style>
-    <link rel="stylesheet" href="assets/design-system.css?v=20261105g">
+    <link rel="stylesheet" href="assets/design-system.css?v=20261106c">
     <script src="assets/theme.js?v=20261105e"></script>
 </head>
 <body class="settings-page">
